@@ -3,9 +3,12 @@ import React, { useState } from 'react';
 import SearchBar from '../components/SearchBar';
 import PaperSelector from '../components/PaperSelector';
 import CitationsTable from '../components/CitationsTable';
+import ProgressBar from '../components/ProgressBar';
 import ErrorMessage from '../components/ErrorMessage';
 import { Paper, Citation } from '../types/semantic-scholar';
 import { SemanticScholarService } from '../services/semanticScholar';
+import { useCitationStore } from '../store/citationStore';
+import { Button } from '../components/ui/button';
 
 const Index = () => {
   const [searchResults, setSearchResults] = useState<Paper[]>([]);
@@ -16,12 +19,23 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
 
+  const {
+    setFirstDegreeCitations,
+    setSecondDegreeCitations,
+    updateProgress,
+    progress,
+    isExpanding,
+    setIsExpanding,
+    resetStore
+  } = useCitationStore();
+
   const handleSearch = async (query: string) => {
     setIsSearching(true);
     setError(null);
     setShowResults(false);
     setSelectedPaper(null);
     setCitations([]);
+    resetStore();
 
     try {
       const response = await SemanticScholarService.searchPapers(query);
@@ -40,15 +54,43 @@ const Index = () => {
     setShowResults(false);
     setIsLoadingCitations(true);
     setError(null);
+    resetStore();
 
     try {
       const response = await SemanticScholarService.getCitations(paper.paperId);
       setCitations(response.data);
+      setFirstDegreeCitations(response.data);
     } catch (err) {
       setError('Failed to load citations. Please try again.');
       console.error('Citations error:', err);
     } finally {
       setIsLoadingCitations(false);
+    }
+  };
+
+  const handleExpandToSecondDegree = async () => {
+    if (!citations.length) return;
+
+    setIsExpanding(true);
+    setError(null);
+
+    try {
+      const secondDegreeMap = await SemanticScholarService.getSecondDegreeCitations(
+        citations,
+        updateProgress
+      );
+
+      // Store the results in the citation store
+      secondDegreeMap.forEach((citationList, paperId) => {
+        setSecondDegreeCitations(paperId, citationList);
+      });
+
+      console.log('2nd degree expansion completed');
+    } catch (err) {
+      setError('Failed to expand to 2nd degree citations. Please try again.');
+      console.error('2nd degree expansion error:', err);
+    } finally {
+      setIsExpanding(false);
     }
   };
 
@@ -58,6 +100,11 @@ const Index = () => {
       handlePaperSelect(selectedPaper);
     }
   };
+
+  const canExpandToSecondDegree = citations.length > 0 && 
+    citations.some(c => c.citationCount && c.citationCount > 0) && 
+    !isExpanding && 
+    !progress.isComplete;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -101,6 +148,27 @@ const Index = () => {
             </div>
           </div>
         )}
+
+        {/* Expand to 2nd Degree Button */}
+        {canExpandToSecondDegree && (
+          <div className="w-full max-w-6xl mx-auto mt-6">
+            <div className="text-center">
+              <Button
+                onClick={handleExpandToSecondDegree}
+                className="bg-[#437e84] hover:bg-[#2d5a5f] text-white px-6 py-3 text-lg"
+                disabled={isExpanding}
+              >
+                {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
+              </Button>
+              <p className="text-sm text-gray-600 mt-2">
+                This will find papers that cite the papers shown above
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Progress Bar */}
+        <ProgressBar progress={progress} isVisible={isExpanding || progress.isComplete} />
 
         {error && (
           <ErrorMessage message={error} onRetry={selectedPaper ? handleRetry : undefined} />

@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { Citation } from '../types/semantic-scholar';
 import { ArrowUp, ArrowDown, ExternalLink } from 'lucide-react';
+import { useCitationStore } from '../store/citationStore';
+import CitationDetailsModal from './CitationDetailsModal';
 
 interface CitationsTableProps {
   citations: Citation[];
@@ -14,6 +16,10 @@ type SortDirection = 'asc' | 'desc';
 const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading }) => {
   const [sortField, setSortField] = useState<SortField>('year');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [selectedPaper, setSelectedPaper] = useState<Citation | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { secondDegreeCitations } = useCitationStore();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -21,6 +27,14 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
     } else {
       setSortField(field);
       setSortDirection('desc');
+    }
+  };
+
+  const handleCitationCountClick = (citation: Citation) => {
+    const secondDegree = secondDegreeCitations.get(citation.paperId);
+    if (secondDegree && secondDegree.length > 0) {
+      setSelectedPaper(citation);
+      setIsModalOpen(true);
     }
   };
 
@@ -90,80 +104,105 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
   if (citations.length === 0) return null;
 
   return (
-    <div className="w-full max-w-6xl mx-auto mt-8">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Citations ({citations.length})
-          </h2>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortButton field="title">Title</SortButton>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortButton field="authors">Authors</SortButton>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortButton field="year">Year</SortButton>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Venue
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortButton field="citationCount">Citations</SortButton>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Link
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sortedCitations.map((citation) => (
-                <tr key={citation.paperId} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900 line-clamp-2">
-                      {citation.title || 'Untitled'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-600">
-                      {citation.authors?.slice(0, 3).map(author => author.name).join(', ')}
-                      {citation.authors && citation.authors.length > 3 && ' et al.'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {citation.year || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {citation.venue || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {citation.citationCount || 0}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {citation.url && (
-                      <a
-                        href={citation.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#437e84] hover:text-[#2d5a5f] inline-flex items-center"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    )}
-                  </td>
+    <>
+      <div className="w-full max-w-6xl mx-auto mt-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Citations ({citations.length})
+            </h2>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <SortButton field="title">Title</SortButton>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <SortButton field="authors">Authors</SortButton>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <SortButton field="year">Year</SortButton>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Venue
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <SortButton field="citationCount">Citations</SortButton>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Link
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {sortedCitations.map((citation) => {
+                  const hasSecondDegree = secondDegreeCitations.has(citation.paperId);
+                  const secondDegreeCount = secondDegreeCitations.get(citation.paperId)?.length || 0;
+                  
+                  return (
+                    <tr key={citation.paperId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900 line-clamp-2">
+                          {citation.title || 'Untitled'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-600">
+                          {citation.authors?.slice(0, 3).map(author => author.name).join(', ')}
+                          {citation.authors && citation.authors.length > 3 && ' et al.'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {citation.year || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {citation.venue || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {hasSecondDegree && secondDegreeCount > 0 ? (
+                          <button
+                            onClick={() => handleCitationCountClick(citation)}
+                            className="text-[#437e84] hover:text-[#2d5a5f] hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-[#437e84] focus:ring-offset-1 rounded px-1"
+                          >
+                            {citation.citationCount || 0} ({secondDegreeCount} expanded)
+                          </button>
+                        ) : (
+                          <span>{citation.citationCount || 0}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {citation.url && (
+                          <a
+                            href={citation.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#437e84] hover:text-[#2d5a5f] inline-flex items-center"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+
+      {selectedPaper && (
+        <CitationDetailsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          citations={secondDegreeCitations.get(selectedPaper.paperId) || []}
+          paperTitle={selectedPaper.title || 'Untitled'}
+        />
+      )}
+    </>
   );
 };
 

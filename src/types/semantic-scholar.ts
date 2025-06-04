@@ -22,6 +22,8 @@ export interface Citation {
   venue?: string;
   citationCount?: number;
   url?: string;
+  secondDegreeCitations?: Citation[];
+  isExpanded?: boolean;
 }
 
 export interface SearchResponse {
@@ -32,4 +34,17 @@ export interface SearchResponse {
 export interface CitationsResponse {
   data: Citation[];
   total: number;
+}
+
+export interface ProgressState {
+  current: number;
+  total: number;
+  currentPaper?: string;
+  isComplete: boolean;
+}
+
+export interface CitationNetworkData {
+  firstDegree: Citation[];
+  secondDegree: Map<string, Citation[]>;
+  progress: ProgressState;
 }
