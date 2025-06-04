@@ -141,6 +141,7 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                 {sortedCitations.map((citation) => {
                   const hasSecondDegree = secondDegreeCitations.has(citation.paperId);
                   const secondDegreeCount = secondDegreeCitations.get(citation.paperId)?.length || 0;
+                  const totalCitations = citation.citationCount || 0;
                   
                   return (
                     <tr key={citation.paperId} className="hover:bg-gray-50">
@@ -167,10 +168,10 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                             onClick={() => handleCitationCountClick(citation)}
                             className="text-[#437e84] hover:text-[#2d5a5f] hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-[#437e84] focus:ring-offset-1 rounded px-1"
                           >
-                            {citation.citationCount || 0} ({secondDegreeCount} expanded)
+                            {secondDegreeCount}/{totalCitations}
                           </button>
                         ) : (
-                          <span>{citation.citationCount || 0}</span>
+                          <span>{totalCitations}</span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">

@@ -61,26 +61,45 @@ export class SemanticScholarService {
   }
 
   static async getCitations(paperId: string, limit: number = 100): Promise<CitationsResponse> {
-    const url = `${BASE_URL}/paper/${paperId}/citations?limit=${limit}&fields=${PAPER_FIELDS}`;
+    // Get all citations by handling pagination
+    const allCitations: any[] = [];
+    let offset = 0;
+    const pageSize = Math.min(limit, 100); // API limit is 100 per request
     
-    return this.rateLimiter.executeWithBackoff(async () => {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Citations fetch failed: ${response.statusText}`);
-      }
-      const data = await response.json();
+    while (true) {
+      const url = `${BASE_URL}/paper/${paperId}/citations?limit=${pageSize}&offset=${offset}&fields=${PAPER_FIELDS}`;
       
+      const response = await this.rateLimiter.executeWithBackoff(async () => {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Citations fetch failed: ${response.statusText}`);
+        }
+        return await response.json();
+      });
+
       // Transform the response to match our Citation interface
-      const transformedData = {
-        ...data,
-        data: data.data.map((item: any) => ({
-          ...item.citingPaper,
-          paperId: item.citingPaper.paperId
-        }))
-      };
-      
-      return transformedData;
-    });
+      const transformedData = response.data.map((item: any) => ({
+        ...item.citingPaper,
+        paperId: item.citingPaper.paperId
+      }));
+
+      allCitations.push(...transformedData);
+
+      // Check if we've reached the requested limit or if there are no more results
+      if (allCitations.length >= limit || transformedData.length < pageSize || !response.next) {
+        break;
+      }
+
+      offset += pageSize;
+    }
+
+    // Trim to requested limit
+    const finalCitations = allCitations.slice(0, limit);
+
+    return {
+      data: finalCitations,
+      total: allCitations.length
+    };
   }
 
   static async getSecondDegreeCitations(
@@ -107,7 +126,8 @@ export class SemanticScholarService {
           isComplete: false 
         });
 
-        const response = await this.getCitations(citation.paperId, 50);
+        // Fetch up to 100 citations per paper (with pagination)
+        const response = await this.getCitations(citation.paperId, 100);
         secondDegreeMap.set(citation.paperId, response.data);
       } catch (error) {
         console.error(`Failed to fetch citations for ${citation.paperId}:`, error);
