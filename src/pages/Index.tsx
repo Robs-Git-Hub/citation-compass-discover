@@ -116,7 +116,7 @@ const Index = () => {
               Academic Citation Explorer
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover all academic papers that have cited a particular research paper using Semantic Scholar
+              Discover academic papers that have cited a particular research paper using Semantic Scholar
             </p>
           </div>
         </div>
@@ -161,7 +161,7 @@ const Index = () => {
                 {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
               </Button>
               <p className="text-sm text-gray-600 mt-2">
-                This will find papers that cite the papers shown above
+                This will find papers that cite the papers shown below
               </p>
             </div>
           </div>
