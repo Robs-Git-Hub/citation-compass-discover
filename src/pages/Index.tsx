@@ -116,7 +116,7 @@ const Index = () => {
               Academic Citation Explorer
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover academic papers that have cited a particular research paper using Semantic Scholar
+              Who cited a paper? And who cited them?
             </p>
           </div>
         </div>
