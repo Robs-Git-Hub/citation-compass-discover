@@ -116,7 +116,7 @@ const Index = () => {
               Academic Citation Explorer
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Who cited a paper? And who cited them?
+              Find related papers through the citation network
             </p>
           </div>
         </div>
