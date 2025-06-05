@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
@@ -63,6 +64,20 @@ const Index = () => {
     AbstractStorage.clearExpiredEntries();
   }, []);
 
+  // Helper function to load abstracts from localStorage for citations
+  const loadAbstractsFromStorage = (citations: Citation[]): Citation[] => {
+    return citations.map(citation => {
+      if (AbstractStorage.isMarkedAsUnavailable(citation.paperId)) {
+        return {
+          ...citation,
+          abstract: null,
+          abstractFetchedViaGemini: true
+        };
+      }
+      return citation;
+    });
+  };
+
   const handleSearch = async (query: string) => {
     setIsSearching(true);
     setError(null);
@@ -103,8 +118,12 @@ const Index = () => {
 
     try {
       const response = await SemanticScholarService.getCitations(paper.paperId);
-      setCitations(response.data);
-      setFirstDegreeCitations(response.data);
+      
+      // Load abstracts from localStorage before setting citations
+      const citationsWithStoredAbstracts = loadAbstractsFromStorage(response.data);
+      
+      setCitations(citationsWithStoredAbstracts);
+      setFirstDegreeCitations(citationsWithStoredAbstracts);
     } catch (err: any) {
       if (import.meta.env.DEV) {
         console.error('Citations fetch error:', err);
@@ -129,8 +148,10 @@ const Index = () => {
         updateProgress
       );
 
+      // Load abstracts from localStorage for second degree citations
       secondDegreeMap.forEach((citationList, paperId) => {
-        setSecondDegreeCitations(paperId, citationList);
+        const citationsWithStoredAbstracts = loadAbstractsFromStorage(citationList);
+        setSecondDegreeCitations(paperId, citationsWithStoredAbstracts);
       });
 
       if (import.meta.env.DEV) {
@@ -258,7 +279,7 @@ const Index = () => {
     }
   };
 
-  // Check if there are eligible citations for abstract fetching
+  // Check if there are eligible citations for abstract fetching (including 2nd degree)
   const getEligibleCitationsForAbstractFetch = () => {
     const allCitations = [
       ...firstDegreeCitations,
