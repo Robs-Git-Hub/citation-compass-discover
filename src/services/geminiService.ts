@@ -10,31 +10,35 @@ export interface GeminiResponse {
 }
 
 export class GeminiService {
-  private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+  private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   
   static async fetchAbstractFromGemini(
     apiKey: string, 
     doiUrl: string, 
     title: string
   ): Promise<string> {
-    const prompt = `Please find and return the abstract for the academic paper with DOI: ${doiUrl} and title: "${title}". 
+    const escapedTitle = title.replace(/"/g, '\\"'); // Important: handles titles with quotes
 
-If you can find the abstract, return only the abstract text without any additional commentary.
-
-If you cannot find the abstract or the paper, respond with exactly: "Abstract not found"`;
+    const prompt = `Conduct a google search for \\\"url:${doiUrl}\\\" and visit the first result. If it is a page of the paper '${escapedTitle}'. Read the whole page and identify the abstract section if there is one. Output only the full verbatim abstract text with no introduction or ending message. If the page is not about '${escapedTitle}' try the other results to find the paper's homepage. If you do not find it or you find it and there is no abstract on the webpage then output \\\"Abstract not found\\\".`;
 
     const requestBody = {
       contents: [{
+        role: "user",
         parts: [{
           text: prompt
         }]
       }],
       generationConfig: {
-        temperature: 0.1,
-        topK: 1,
-        topP: 0.1,
+        temperature: 0.25,
+        topP: 0.2,
+        responseMimeType: "text/plain",
         maxOutputTokens: 1000,
-      }
+      },
+      tools: [
+        {
+          "googleSearch": {}
+        }
+      ]
     };
 
     const response = await fetch(`${this.API_URL}?key=${apiKey}`, {
