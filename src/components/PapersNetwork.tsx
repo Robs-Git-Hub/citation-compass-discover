@@ -137,19 +137,10 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
-      {/* Header with controls */}
+      {/* Header with selected paper title */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Papers Network</h2>
-            <p className="text-gray-600">
-              Interactive visualization of citation relationships around your selected paper
-            </p>
-          </div>
-          <Button onClick={onBackToTable} variant="outline" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Table View
-          </Button>
+        <div className="mb-4">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">{selectedPaper.title}</h2>
         </div>
 
         {/* Controls */}
@@ -222,18 +213,6 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
                 </div>
               </div>
             )}
-            annotations={[
-              {
-                type: 'circle',
-                match: { id: selectedPaper.paperId },
-                noteX: 40,
-                noteY: 40,
-                offset: 6,
-                noteTextOffset: 5,
-                note: 'Selected Paper',
-                noteWidth: 120
-              }
-            ]}
             motionConfig="wobbly"
           />
         </div>
