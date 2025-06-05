@@ -1,4 +1,5 @@
-import { SearchResponse, CitationsResponse, ProgressState } from '../types/semantic-scholar';
+
+import { SearchResponse, CitationsResponse, ProgressState, Paper } from '../types/semantic-scholar';
 import { ErrorHandler, ErrorType } from '../utils/errorHandler';
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1';

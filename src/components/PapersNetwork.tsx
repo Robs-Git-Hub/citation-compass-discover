@@ -195,7 +195,7 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
             key={networkKey}
             data={{ nodes, links: edges }}
             margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-            linkDistance={(e) => e.distance}
+            linkDistance={30}
             centeringStrength={0.3}
             repulsivity={6}
             nodeSize={(n) => n.radius}
@@ -203,22 +203,22 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
             nodeColor={(n) => n.color}
             nodeBorderWidth={1}
             nodeBorderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
-            linkThickness={(n) => 2}
+            linkThickness={2}
             linkColor={{ theme: 'background' }}
             onClick={handleNodeClick}
             nodeTooltip={({ node }) => (
               <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 max-w-xs">
                 <div className="font-medium text-gray-900 mb-1">
-                  {truncateTitle(node.title, 60)}
+                  {truncateTitle(node.data.title, 60)}
                 </div>
-                {node.authors && (
-                  <div className="text-sm text-gray-600 mb-1">{node.authors}</div>
+                {node.data.authors && (
+                  <div className="text-sm text-gray-600 mb-1">{node.data.authors}</div>
                 )}
                 <div className="text-xs text-gray-500 space-y-1">
-                  {node.year && <div>Year: {node.year}</div>}
-                  {node.venue && <div>Venue: {node.venue}</div>}
-                  {node.citationCount !== undefined && (
-                    <div>Citations: {node.citationCount}</div>
+                  {node.data.year && <div>Year: {node.data.year}</div>}
+                  {node.data.venue && <div>Venue: {node.data.venue}</div>}
+                  {node.data.citationCount !== undefined && (
+                    <div>Citations: {node.data.citationCount}</div>
                   )}
                 </div>
               </div>
@@ -232,8 +232,7 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
                 offset: 6,
                 noteTextOffset: 5,
                 note: 'Selected Paper',
-                noteWidth: 120,
-                noteColor: '#437e84'
+                noteWidth: 120
               }
             ]}
             motionConfig="wobbly"
