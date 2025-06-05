@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
@@ -5,13 +6,14 @@ import PaperSelector from '../components/PaperSelector';
 import CitationsTable from '../components/CitationsTable';
 import ProgressBar from '../components/ProgressBar';
 import ErrorMessage from '../components/ErrorMessage';
+import GeminiApiKeyModal from '../components/GeminiApiKeyModal';
 import { Paper, Citation } from '../types/semantic-scholar';
 import { SemanticScholarService } from '../services/semanticScholar';
 import { useCitationStore } from '../store/citationStore';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ErrorHandler, ErrorType, AppError } from '../utils/errorHandler';
-import { Network, Table } from 'lucide-react';
+import { Network, Table, FileText } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,6 +23,10 @@ const Index = () => {
   const [isLoadingCitations, setIsLoadingCitations] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
+
+  // Gemini API key state (session-only, not persisted)
+  const [geminiApiKey, setGeminiApiKey] = useState<string>('');
+  const [isGeminiKeyModalOpen, setIsGeminiKeyModalOpen] = useState(false);
 
   const {
     selectedPaper,
@@ -128,6 +134,25 @@ const Index = () => {
     }
   };
 
+  const handleFetchMissingAbstracts = () => {
+    if (!geminiApiKey) {
+      setIsGeminiKeyModalOpen(true);
+    } else {
+      // TODO: Implement abstract fetching logic in Phase 2
+      console.log('Starting to fetch missing abstracts...');
+    }
+  };
+
+  const handleGeminiApiKeySubmit = (apiKey: string) => {
+    setGeminiApiKey(apiKey);
+    if (import.meta.env.DEV) {
+      console.log('Gemini API key set for session');
+    }
+    // After setting the key, start fetching abstracts
+    // TODO: Implement abstract fetching logic in Phase 2
+    console.log('Starting to fetch missing abstracts...');
+  };
+
   const handleViewNetwork = () => {
     if (selectedPaper) {
       navigate(`/paper/${selectedPaper.paperId}/network`);
@@ -141,6 +166,18 @@ const Index = () => {
     }
   };
 
+  // Check if there are eligible citations for abstract fetching
+  const getEligibleCitationsForAbstractFetch = () => {
+    return firstDegreeCitations.filter(citation => 
+      !citation.abstract && 
+      citation.externalIds?.DOI &&
+      // TODO: Add localStorage check for abstractUnavailable in Phase 4
+      true
+    );
+  };
+
+  const eligibleCitations = getEligibleCitationsForAbstractFetch();
+  const canFetchAbstracts = eligibleCitations.length > 0 && !isExpanding && !isLoadingCitations;
   const canExpandToSecondDegree = firstDegreeCitations.length > 0 && 
     firstDegreeCitations.some(c => c.citationCount && c.citationCount > 0) && 
     !isExpanding && 
@@ -229,20 +266,40 @@ const Index = () => {
           </div>
         )}
 
-        {/* Action Button - Only show Expand to 2nd Degree button with brand color */}
-        {canExpandToSecondDegree && (
+        {/* Action Buttons */}
+        {(canExpandToSecondDegree || canFetchAbstracts) && (
           <div className="w-full max-w-6xl mx-auto mt-6">
-            <div className="text-center">
-              <Button
-                onClick={handleExpandToSecondDegree}
-                className="bg-brand-primary text-white hover:bg-brand-primary-hover px-6 py-3 text-lg"
-                disabled={isExpanding}
-              >
-                {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
-              </Button>
-              <p className="text-sm text-gray-600 mt-2">
-                This will find papers that cite the papers shown below
-              </p>
+            <div className="text-center space-y-3">
+              {canFetchAbstracts && (
+                <div>
+                  <Button
+                    onClick={handleFetchMissingAbstracts}
+                    className="bg-brand-primary text-white hover:bg-brand-primary-hover px-6 py-3 text-lg mr-4"
+                    disabled={isExpanding}
+                  >
+                    <FileText className="h-5 w-5 mr-2" />
+                    Fetch Missing Abstracts
+                  </Button>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Found {eligibleCitations.length} paper{eligibleCitations.length !== 1 ? 's' : ''} with missing abstracts that can be fetched
+                  </p>
+                </div>
+              )}
+              
+              {canExpandToSecondDegree && (
+                <div>
+                  <Button
+                    onClick={handleExpandToSecondDegree}
+                    className="bg-brand-primary text-white hover:bg-brand-primary-hover px-6 py-3 text-lg"
+                    disabled={isExpanding}
+                  >
+                    {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
+                  </Button>
+                  <p className="text-sm text-gray-600 mt-2">
+                    This will find papers that cite the papers shown below
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -267,6 +324,13 @@ const Index = () => {
           </div>
         )}
       </div>
+
+      {/* Gemini API Key Modal */}
+      <GeminiApiKeyModal
+        isOpen={isGeminiKeyModalOpen}
+        onClose={() => setIsGeminiKeyModalOpen(false)}
+        onApiKeySubmit={handleGeminiApiKeySubmit}
+      />
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-16">
