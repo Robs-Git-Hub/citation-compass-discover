@@ -33,10 +33,11 @@ export interface Citation {
   venue?: string;
   citationCount?: number;
   url?: string;
-  abstract?: string;
+  abstract?: string | null;
   externalIds?: ExternalIds;
   secondDegreeCitations?: Citation[];
   isExpanded?: boolean;
+  abstractFetchedViaGemini?: boolean;
 }
 
 export interface SearchResponse {

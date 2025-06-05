@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
@@ -31,6 +30,7 @@ const Index = () => {
   const {
     selectedPaper,
     firstDegreeCitations,
+    secondDegreeCitations,
     setSelectedPaper,
     setFirstDegreeCitations,
     setSecondDegreeCitations,
@@ -38,6 +38,9 @@ const Index = () => {
     progress,
     isExpanding,
     setIsExpanding,
+    isFetchingAbstracts,
+    setIsFetchingAbstracts,
+    updateCitationAbstract,
     resetStore,
     clearNetworkData
   } = useCitationStore();
@@ -138,8 +141,55 @@ const Index = () => {
     if (!geminiApiKey) {
       setIsGeminiKeyModalOpen(true);
     } else {
-      // TODO: Implement abstract fetching logic in Phase 2
-      console.log('Starting to fetch missing abstracts...');
+      startFetchingAbstracts();
+    }
+  };
+
+  const startFetchingAbstracts = async () => {
+    const eligibleCitations = getEligibleCitationsForAbstractFetch();
+    if (eligibleCitations.length === 0) return;
+
+    setIsFetchingAbstracts(true);
+    setError(null);
+
+    try {
+      // TODO: Implement actual Gemini API calls in Phase 3
+      console.log(`Starting to fetch abstracts for ${eligibleCitations.length} papers...`);
+      
+      // Simulate progress for now
+      for (let i = 0; i < eligibleCitations.length; i++) {
+        const citation = eligibleCitations[i];
+        updateProgress({
+          current: i + 1,
+          total: eligibleCitations.length,
+          currentPaper: citation.title || 'Unknown paper',
+          isComplete: false
+        });
+        
+        // Simulate delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // TODO: Replace with actual Gemini API call
+        // For now, just mark as processed
+        updateCitationAbstract(citation.paperId, null, true);
+      }
+
+      updateProgress({
+        current: eligibleCitations.length,
+        total: eligibleCitations.length,
+        isComplete: true
+      });
+
+      if (import.meta.env.DEV) {
+        console.log('Abstract fetching completed');
+      }
+    } catch (err: any) {
+      if (import.meta.env.DEV) {
+        console.error('Abstract fetching error:', err);
+      }
+      setError('Failed to fetch abstracts. Please try again.');
+    } finally {
+      setIsFetchingAbstracts(false);
     }
   };
 
@@ -148,9 +198,8 @@ const Index = () => {
     if (import.meta.env.DEV) {
       console.log('Gemini API key set for session');
     }
-    // After setting the key, start fetching abstracts
-    // TODO: Implement abstract fetching logic in Phase 2
-    console.log('Starting to fetch missing abstracts...');
+    // Start fetching abstracts after setting the key
+    setTimeout(() => startFetchingAbstracts(), 100);
   };
 
   const handleViewNetwork = () => {
@@ -168,22 +217,39 @@ const Index = () => {
 
   // Check if there are eligible citations for abstract fetching
   const getEligibleCitationsForAbstractFetch = () => {
-    return firstDegreeCitations.filter(citation => 
+    const allCitations = [
+      ...firstDegreeCitations,
+      ...Array.from(secondDegreeCitations.values()).flat()
+    ];
+
+    return allCitations.filter(citation => 
       !citation.abstract && 
       citation.externalIds?.DOI &&
+      !citation.abstractFetchedViaGemini &&
       // TODO: Add localStorage check for abstractUnavailable in Phase 4
       true
     );
   };
 
   const eligibleCitations = getEligibleCitationsForAbstractFetch();
-  const canFetchAbstracts = eligibleCitations.length > 0 && !isExpanding && !isLoadingCitations;
+  const canFetchAbstracts = eligibleCitations.length > 0 && 
+    !isExpanding && 
+    !isLoadingCitations && 
+    !isFetchingAbstracts &&
+    geminiApiKey.length > 0;
+  
   const canExpandToSecondDegree = firstDegreeCitations.length > 0 && 
     firstDegreeCitations.some(c => c.citationCount && c.citationCount > 0) && 
     !isExpanding && 
+    !isFetchingAbstracts &&
     !progress.isComplete;
 
   const canViewNetwork = firstDegreeCitations.length > 0;
+
+  const showFetchAbstractsButton = eligibleCitations.length > 0 && 
+    !isExpanding && 
+    !isLoadingCitations && 
+    !isFetchingAbstracts;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -267,21 +333,22 @@ const Index = () => {
         )}
 
         {/* Action Buttons */}
-        {(canExpandToSecondDegree || canFetchAbstracts) && (
+        {(showFetchAbstractsButton || canExpandToSecondDegree) && (
           <div className="w-full max-w-6xl mx-auto mt-6">
             <div className="text-center space-y-3">
-              {canFetchAbstracts && (
+              {showFetchAbstractsButton && (
                 <div>
                   <Button
                     onClick={handleFetchMissingAbstracts}
                     className="bg-brand-primary text-white hover:bg-brand-primary-hover px-6 py-3 text-lg mr-4"
-                    disabled={isExpanding}
+                    disabled={!canFetchAbstracts}
                   >
                     <FileText className="h-5 w-5 mr-2" />
-                    Fetch Missing Abstracts
+                    {isFetchingAbstracts ? 'Fetching Abstracts...' : 'Fetch Missing Abstracts'}
                   </Button>
                   <p className="text-sm text-gray-600 mt-2">
                     Found {eligibleCitations.length} paper{eligibleCitations.length !== 1 ? 's' : ''} with missing abstracts that can be fetched
+                    {!geminiApiKey && ' (API key required)'}
                   </p>
                 </div>
               )}
@@ -291,7 +358,7 @@ const Index = () => {
                   <Button
                     onClick={handleExpandToSecondDegree}
                     className="bg-brand-primary text-white hover:bg-brand-primary-hover px-6 py-3 text-lg"
-                    disabled={isExpanding}
+                    disabled={!canExpandToSecondDegree}
                   >
                     {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
                   </Button>
@@ -305,7 +372,7 @@ const Index = () => {
         )}
 
         {/* Progress Bar */}
-        <ProgressBar progress={progress} isVisible={isExpanding || progress.isComplete} />
+        <ProgressBar progress={progress} isVisible={isExpanding || isFetchingAbstracts || progress.isComplete} />
 
         {error && (
           <ErrorMessage message={error} onRetry={selectedPaper ? handleRetry : undefined} />
