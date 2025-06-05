@@ -12,17 +12,17 @@ import { Skeleton } from '../components/ui/skeleton';
 const NetworkView: React.FC = () => {
   const { paperId } = useParams<{ paperId: string }>();
   const navigate = useNavigate();
-  const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
-  const [firstDegreeCitations, setFirstDegreeCitations] = useState<Citation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const {
-    setFirstDegreeCitations: setStoreFirstDegree,
+    selectedPaper,
+    firstDegreeCitations,
+    secondDegreeCitations,
+    setSelectedPaper,
+    setFirstDegreeCitations,
     setSecondDegreeCitations,
     updateProgress,
-    progress,
-    isExpanding,
     setIsExpanding,
     resetStore
   } = useCitationStore();
@@ -41,44 +41,74 @@ const NetworkView: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-    resetStore();
 
     try {
-      // First, get paper details (we need this for the ego node)
-      const paperResponse = await SemanticScholarService.searchPapers(`paperId:${paperId}`, 1);
-      if (!paperResponse.data.length) {
-        throw new Error('Paper not found');
-      }
-      
-      const paper = paperResponse.data[0];
-      setSelectedPaper(paper);
-
-      // Get first degree citations
-      const citationsResponse = await SemanticScholarService.getCitations(paperId);
-      const citations = citationsResponse.data;
-      setFirstDegreeCitations(citations);
-      setStoreFirstDegree(citations);
-
-      // Automatically fetch second degree citations for network view
-      if (citations.length > 0) {
-        setIsExpanding(true);
+      // Check if we already have the data in store and it matches the current paperId
+      if (selectedPaper && selectedPaper.paperId === paperId && firstDegreeCitations.length > 0) {
+        // Data is already available in store
+        await ensureSecondDegreeData();
+      } else {
+        // Need to fetch fresh data
+        resetStore();
         
-        const secondDegreeMap = await SemanticScholarService.getSecondDegreeCitations(
-          citations,
-          updateProgress
-        );
+        // First, get paper details
+        const paperResponse = await SemanticScholarService.getPaper(paperId);
+        const paper = paperResponse.data;
+        setSelectedPaper(paper);
 
-        secondDegreeMap.forEach((citationList, paperId) => {
-          setSecondDegreeCitations(paperId, citationList);
-        });
+        // Get first degree citations
+        const citationsResponse = await SemanticScholarService.getCitations(paperId);
+        const citations = citationsResponse.data;
+        setFirstDegreeCitations(citations);
 
-        setIsExpanding(false);
+        // Automatically fetch second degree citations for network view
+        if (citations.length > 0) {
+          setIsExpanding(true);
+          
+          const secondDegreeMap = await SemanticScholarService.getSecondDegreeCitations(
+            citations,
+            updateProgress
+          );
+
+          secondDegreeMap.forEach((citationList, paperId) => {
+            setSecondDegreeCitations(paperId, citationList);
+          });
+
+          setIsExpanding(false);
+        }
       }
     } catch (err: any) {
       const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const ensureSecondDegreeData = async () => {
+    // Check if we need to fetch second degree data
+    const needsSecondDegree = firstDegreeCitations.some(citation => 
+      citation.citationCount && citation.citationCount > 0 && !secondDegreeCitations.has(citation.paperId)
+    );
+
+    if (needsSecondDegree) {
+      setIsExpanding(true);
+      
+      try {
+        const secondDegreeMap = await SemanticScholarService.getSecondDegreeCitations(
+          firstDegreeCitations,
+          updateProgress
+        );
+
+        secondDegreeMap.forEach((citationList, paperId) => {
+          setSecondDegreeCitations(paperId, citationList);
+        });
+      } catch (err: any) {
+        const appError = ErrorHandler.handleApiError(err);
+        setError(appError.userMessage);
+      } finally {
+        setIsExpanding(false);
+      }
     }
   };
 

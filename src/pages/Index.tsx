@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import PaperSelector from '../components/PaperSelector';
@@ -15,7 +16,6 @@ import { Network } from 'lucide-react';
 const Index = () => {
   const navigate = useNavigate();
   const [searchResults, setSearchResults] = useState<Paper[]>([]);
-  const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
   const [citations, setCitations] = useState<Citation[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingCitations, setIsLoadingCitations] = useState(false);
@@ -23,20 +23,30 @@ const Index = () => {
   const [showResults, setShowResults] = useState(false);
 
   const {
+    selectedPaper,
+    firstDegreeCitations,
+    setSelectedPaper,
     setFirstDegreeCitations,
     setSecondDegreeCitations,
     updateProgress,
     progress,
     isExpanding,
     setIsExpanding,
-    resetStore
+    resetStore,
+    clearNetworkData
   } = useCitationStore();
+
+  // Effect to sync local citations with store
+  useEffect(() => {
+    if (selectedPaper && firstDegreeCitations.length > 0) {
+      setCitations(firstDegreeCitations);
+    }
+  }, [selectedPaper, firstDegreeCitations]);
 
   const handleSearch = async (query: string) => {
     setIsSearching(true);
     setError(null);
     setShowResults(false);
-    setSelectedPaper(null);
     setCitations([]);
     resetStore();
 
@@ -57,7 +67,7 @@ const Index = () => {
     setShowResults(false);
     setIsLoadingCitations(true);
     setError(null);
-    resetStore();
+    clearNetworkData();
 
     try {
       const response = await SemanticScholarService.getCitations(paper.paperId);
@@ -72,18 +82,17 @@ const Index = () => {
   };
 
   const handleExpandToSecondDegree = async () => {
-    if (!citations.length) return;
+    if (!firstDegreeCitations.length) return;
 
     setIsExpanding(true);
     setError(null);
 
     try {
       const secondDegreeMap = await SemanticScholarService.getSecondDegreeCitations(
-        citations,
+        firstDegreeCitations,
         updateProgress
       );
 
-      // Store the results in the citation store
       secondDegreeMap.forEach((citationList, paperId) => {
         setSecondDegreeCitations(paperId, citationList);
       });
@@ -112,12 +121,12 @@ const Index = () => {
     }
   };
 
-  const canExpandToSecondDegree = citations.length > 0 && 
-    citations.some(c => c.citationCount && c.citationCount > 0) && 
+  const canExpandToSecondDegree = firstDegreeCitations.length > 0 && 
+    firstDegreeCitations.some(c => c.citationCount && c.citationCount > 0) && 
     !isExpanding && 
     !progress.isComplete;
 
-  const canViewNetwork = citations.length > 0;
+  const canViewNetwork = firstDegreeCitations.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">

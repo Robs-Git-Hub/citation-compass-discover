@@ -195,16 +195,18 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
             key={networkKey}
             data={{ nodes, links: edges }}
             margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-            linkDistance={30}
+            linkDistance={80}
             centeringStrength={0.3}
-            repulsivity={6}
+            repulsivity={30}
             nodeSize={(n) => n.radius}
             activeNodeSize={(n) => n.radius * 1.5}
             nodeColor={(n) => n.color}
             nodeBorderWidth={1}
             nodeBorderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
             linkThickness={2}
-            linkColor={{ theme: 'background' }}
+            linkColor="#999999"
+            enableLinkArrows={true}
+            linkArrowsScale={1}
             onClick={handleNodeClick}
             nodeTooltip={({ node }) => (
               <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 max-w-xs">
