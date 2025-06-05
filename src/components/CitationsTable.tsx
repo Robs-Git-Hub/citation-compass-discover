@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
 import { Citation } from '../types/semantic-scholar';
-import { ArrowUp, ArrowDown, FileText } from 'lucide-react';
+import { ArrowUp, ArrowDown, FileText, ExternalLink } from 'lucide-react';
 import { useCitationStore } from '../store/citationStore';
 import CitationDetailsModal from './CitationDetailsModal';
 import AbstractModal from './AbstractModal';
@@ -10,7 +11,7 @@ interface CitationsTableProps {
   isLoading: boolean;
 }
 
-type SortField = 'title' | 'year' | 'citationCount' | 'authors' | 'venue' | 'abstract';
+type SortField = 'title' | 'year' | 'citationCount' | 'authors' | 'venue' | 'abstract' | 'doi';
 type SortDirection = 'asc' | 'desc';
 
 // Constants for magic values
@@ -83,6 +84,11 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
           // Sort by whether abstract exists (papers with abstracts first when desc)
           aValue = a.abstract ? 1 : 0;
           bValue = b.abstract ? 1 : 0;
+          break;
+        case 'doi':
+          // Sort by whether DOI exists (papers with DOI first when desc)
+          aValue = a.doi ? 1 : 0;
+          bValue = b.doi ? 1 : 0;
           break;
         default:
           return 0;
@@ -159,6 +165,9 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                   <th className={COMMON_TH_CLASSES}>
                     <SortButton field="abstract">Abstract</SortButton>
                   </th>
+                  <th className={COMMON_TH_CLASSES}>
+                    <SortButton field="doi">DOI</SortButton>
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -218,6 +227,19 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                           >
                             <FileText className="h-4 w-4" />
                           </button>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {citation.doi && (
+                          <a
+                            href={`https://doi.org/${citation.doi}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View DOI"
+                            className="text-brand-primary hover:text-brand-primary-hover inline-flex items-center"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
                         )}
                       </td>
                     </tr>

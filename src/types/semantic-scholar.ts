@@ -13,6 +13,7 @@ export interface Paper {
   citationCount?: number;
   url?: string;
   abstract?: string;
+  doi?: string;
 }
 
 export interface Citation {
@@ -24,6 +25,7 @@ export interface Citation {
   citationCount?: number;
   url?: string;
   abstract?: string;
+  doi?: string;
   secondDegreeCitations?: Citation[];
   isExpanded?: boolean;
 }
