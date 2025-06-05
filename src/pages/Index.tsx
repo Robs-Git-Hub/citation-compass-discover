@@ -8,6 +8,8 @@ import ErrorMessage from '../components/ErrorMessage';
 import GeminiApiKeyModal from '../components/GeminiApiKeyModal';
 import { Paper, Citation } from '../types/semantic-scholar';
 import { SemanticScholarService } from '../services/semanticScholar';
+import { GeminiService } from '../services/geminiService';
+import { RateLimiter } from '../utils/rateLimiter';
 import { useCitationStore } from '../store/citationStore';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -26,6 +28,9 @@ const Index = () => {
   // Gemini API key state (session-only, not persisted)
   const [geminiApiKey, setGeminiApiKey] = useState<string>('');
   const [isGeminiKeyModalOpen, setIsGeminiKeyModalOpen] = useState(false);
+
+  // Add rate limiter instance
+  const [rateLimiter] = useState(() => new RateLimiter(4000)); // 4 seconds between calls
 
   const {
     selectedPaper,
@@ -153,25 +158,54 @@ const Index = () => {
     setError(null);
 
     try {
-      // TODO: Implement actual Gemini API calls in Phase 3
-      console.log(`Starting to fetch abstracts for ${eligibleCitations.length} papers...`);
-      
-      // Simulate progress for now
+      if (import.meta.env.DEV) {
+        console.log(`Starting to fetch abstracts for ${eligibleCitations.length} papers...`);
+      }
+
       for (let i = 0; i < eligibleCitations.length; i++) {
         const citation = eligibleCitations[i];
+        
         updateProgress({
-          current: i + 1,
+          current: i,
           total: eligibleCitations.length,
           currentPaper: citation.title || 'Unknown paper',
           isComplete: false
         });
-        
-        // Simulate delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // TODO: Replace with actual Gemini API call
-        // For now, just mark as processed
-        updateCitationAbstract(citation.paperId, null, true);
+
+        try {
+          // Use rate limiter to ensure 4-second delays between API calls
+          const abstractText = await rateLimiter.add(() => 
+            GeminiService.fetchAbstractWithRetry(
+              geminiApiKey,
+              `https://doi.org/${citation.externalIds?.DOI}`,
+              citation.title || ''
+            )
+          );
+
+          // Check if Gemini responded with "Abstract not found"
+          const isAbstractNotFound = /abstract\s+not\s+found/i.test(abstractText.trim());
+          
+          if (isAbstractNotFound) {
+            // Mark as unavailable
+            updateCitationAbstract(citation.paperId, null, true);
+            if (import.meta.env.DEV) {
+              console.log(`Abstract not found for: ${citation.title}`);
+            }
+          } else {
+            // Store the found abstract
+            updateCitationAbstract(citation.paperId, abstractText, true);
+            if (import.meta.env.DEV) {
+              console.log(`Abstract fetched for: ${citation.title}`);
+            }
+          }
+
+        } catch (error) {
+          // After retries failed, mark as unavailable
+          updateCitationAbstract(citation.paperId, null, true);
+          if (import.meta.env.DEV) {
+            console.error(`Failed to fetch abstract for ${citation.title}:`, error);
+          }
+        }
       }
 
       updateProgress({
@@ -183,6 +217,7 @@ const Index = () => {
       if (import.meta.env.DEV) {
         console.log('Abstract fetching completed');
       }
+
     } catch (err: any) {
       if (import.meta.env.DEV) {
         console.error('Abstract fetching error:', err);
