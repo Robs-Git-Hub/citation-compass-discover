@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
@@ -7,6 +6,7 @@ import CitationsTable from '../components/CitationsTable';
 import ProgressBar from '../components/ProgressBar';
 import ErrorMessage from '../components/ErrorMessage';
 import GeminiApiKeyModal from '../components/GeminiApiKeyModal';
+import AbstractFetchingReport, { AbstractFetchResult } from '../components/AbstractFetchingReport';
 import { Paper, Citation } from '../types/semantic-scholar';
 import { SemanticScholarService } from '../services/semanticScholar';
 import { GeminiService } from '../services/geminiService';
@@ -30,6 +30,10 @@ const Index = () => {
   // Gemini API key state (session-only, not persisted)
   const [geminiApiKey, setGeminiApiKey] = useState<string>('');
   const [isGeminiKeyModalOpen, setIsGeminiKeyModalOpen] = useState(false);
+
+  // Abstract fetching report state
+  const [fetchingResults, setFetchingResults] = useState<AbstractFetchResult[]>([]);
+  const [showFetchingReport, setShowFetchingReport] = useState(false);
 
   // Add rate limiter instance
   const [rateLimiter] = useState(() => new RateLimiter(4000)); // 4 seconds between calls
@@ -183,6 +187,9 @@ const Index = () => {
 
     setIsFetchingAbstracts(true);
     setError(null);
+    setFetchingResults([]); // Reset results
+
+    const results: AbstractFetchResult[] = [];
 
     try {
       if (import.meta.env.DEV) {
@@ -216,12 +223,26 @@ const Index = () => {
             // Mark as unavailable in localStorage and store
             AbstractStorage.markAsUnavailable(citation.paperId);
             updateCitationAbstract(citation.paperId, null, true);
+            
+            results.push({
+              paperId: citation.paperId,
+              title: citation.title || 'Untitled',
+              status: 'not_found'
+            });
+            
             if (import.meta.env.DEV) {
               console.log(`Abstract not found for: ${citation.title}`);
             }
           } else {
             // Store the found abstract
             updateCitationAbstract(citation.paperId, abstractText, true);
+            
+            results.push({
+              paperId: citation.paperId,
+              title: citation.title || 'Untitled',
+              status: 'success'
+            });
+            
             if (import.meta.env.DEV) {
               console.log(`Abstract fetched for: ${citation.title}`);
             }
@@ -231,6 +252,15 @@ const Index = () => {
           // After retries failed, mark as unavailable in localStorage and store
           AbstractStorage.markAsUnavailable(citation.paperId);
           updateCitationAbstract(citation.paperId, null, true);
+          
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          results.push({
+            paperId: citation.paperId,
+            title: citation.title || 'Untitled',
+            status: 'failed',
+            error: errorMessage
+          });
+          
           if (import.meta.env.DEV) {
             console.error(`Failed to fetch abstract for ${citation.title}:`, error);
           }
@@ -242,6 +272,9 @@ const Index = () => {
         total: eligibleCitations.length,
         isComplete: true
       });
+
+      setFetchingResults(results);
+      setShowFetchingReport(true);
 
       if (import.meta.env.DEV) {
         console.log('Abstract fetching completed');
@@ -460,6 +493,14 @@ const Index = () => {
         isOpen={isGeminiKeyModalOpen}
         onClose={() => setIsGeminiKeyModalOpen(false)}
         onApiKeySubmit={handleGeminiApiKeySubmit}
+      />
+
+      {/* Abstract Fetching Report Modal */}
+      <AbstractFetchingReport
+        isOpen={showFetchingReport}
+        onClose={() => setShowFetchingReport(false)}
+        results={fetchingResults}
+        totalProcessed={fetchingResults.length}
       />
 
       {/* Footer */}
