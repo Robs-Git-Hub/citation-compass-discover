@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -8,7 +7,8 @@ import {
 } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, X, Edit2, Loader2 } from 'lucide-react';
+import { Plus, X, Edit2, Loader2, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface TopicEditorModalProps {
   isOpen: boolean;
@@ -32,6 +32,16 @@ const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
   useEffect(() => {
     setEditableTopics([...topics]);
   }, [topics]);
+
+  const handleCopyTopics = async () => {
+    try {
+      const topicsText = editableTopics.join('\n');
+      await navigator.clipboard.writeText(topicsText);
+      toast.success('Topics copied to clipboard!');
+    } catch (error) {
+      toast.error('Failed to copy topics');
+    }
+  };
 
   const handleAddTopic = () => {
     if (newTopic.trim()) {
@@ -87,7 +97,18 @@ const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Edit AI Suggested Topics</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            Edit AI Suggested Topics
+            <Button
+              onClick={handleCopyTopics}
+              variant="outline"
+              size="sm"
+              className="ml-2"
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              Copy
+            </Button>
+          </DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col space-y-4 py-4">

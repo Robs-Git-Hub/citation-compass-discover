@@ -1,6 +1,10 @@
-
 import { create } from 'zustand';
 import { Paper, Citation, ProgressState } from '../types/semantic-scholar';
+
+interface PaperTopicAssignment {
+  paper_id: string;
+  topics: string[];
+}
 
 interface CitationStore {
   selectedPaper: Paper | null;
@@ -10,6 +14,8 @@ interface CitationStore {
   isExpanding: boolean;
   isFetchingAbstracts: boolean;
   geminiApiKey: string | null;
+  topics: string[];
+  paperTopics: Map<string, string[]>;
   
   setSelectedPaper: (paper: Paper | null) => void;
   setFirstDegreeCitations: (citations: Citation[]) => void;
@@ -19,6 +25,7 @@ interface CitationStore {
   setIsFetchingAbstracts: (fetching: boolean) => void;
   updateCitationAbstract: (paperId: string, abstract: string | null, fetchedViaGemini: boolean) => void;
   setGeminiApiKey: (apiKey: string) => void;
+  setTopicAssignments: (assignments: PaperTopicAssignment[]) => void;
   resetStore: () => void;
   clearNetworkData: () => void;
 }
@@ -31,6 +38,8 @@ export const useCitationStore = create<CitationStore>((set, get) => ({
   isExpanding: false,
   isFetchingAbstracts: false,
   geminiApiKey: null,
+  topics: [],
+  paperTopics: new Map(),
 
   setSelectedPaper: (paper) => set({ selectedPaper: paper }),
 
@@ -78,6 +87,23 @@ export const useCitationStore = create<CitationStore>((set, get) => ({
 
   setGeminiApiKey: (apiKey) => set({ geminiApiKey: apiKey }),
 
+  setTopicAssignments: (assignments) =>
+    set((state) => {
+      const allTopics = new Set<string>();
+      const paperTopicMap = new Map<string, string[]>();
+
+      assignments.forEach(assignment => {
+        const topics = assignment.topics.length > 0 ? assignment.topics : ['Unlabelled'];
+        topics.forEach(topic => allTopics.add(topic));
+        paperTopicMap.set(assignment.paper_id, topics);
+      });
+
+      return {
+        topics: Array.from(allTopics),
+        paperTopics: paperTopicMap
+      };
+    }),
+
   resetStore: () => set({
     selectedPaper: null,
     firstDegreeCitations: [],
@@ -86,6 +112,8 @@ export const useCitationStore = create<CitationStore>((set, get) => ({
     isExpanding: false,
     isFetchingAbstracts: false,
     geminiApiKey: null,
+    topics: [],
+    paperTopics: new Map(),
   }),
 
   clearNetworkData: () => set({

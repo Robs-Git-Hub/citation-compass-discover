@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -12,6 +11,8 @@ import { Sparkles, List, Loader2 } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 import TopicEditorModal from './TopicEditorModal';
 import { Paper } from '../types/semantic-scholar';
+import { useCitationStore } from '../store/citationStore';
+import { toast } from 'sonner';
 
 interface TopicPlottingModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
   const [aiSuggestedTopics, setAiSuggestedTopics] = useState<string[]>([]);
   const [isAssigningTopics, setIsAssigningTopics] = useState(false);
+
+  const { setTopicAssignments } = useCitationStore();
 
   const handleBackToChoice = () => {
     setCurrentView('choice');
@@ -72,7 +75,7 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
       setCurrentView('ai-editor');
     } catch (error) {
       console.error('Failed to generate topics:', error);
-      // Here you could show a toast error message
+      toast.error('Failed to generate topics. Please try again.');
     } finally {
       setIsLoadingTopics(false);
     }
@@ -95,13 +98,14 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
 
       const assignments = await GeminiService.assignTopicsToPapers(papersWithIds, topics, geminiApiKey);
       
-      // For now, log the results - in Phase 4 we'll save to store
-      console.log('Topic assignments:', assignments);
+      // Save assignments to store instead of just logging
+      setTopicAssignments(assignments);
       
+      toast.success('Topics successfully assigned to papers!');
       handleCloseModal();
     } catch (error) {
       console.error('Failed to assign topics:', error);
-      // Here you could show a toast error message
+      toast.error('Failed to assign topics. Please try again.');
     } finally {
       setIsAssigningTopics(false);
     }
@@ -173,7 +177,7 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
                 </div>
                 
                 <Textarea
-                  placeholder=""
+                  placeholder="Machine Learning&#10;Natural Language Processing&#10;Computer Vision"
                   value={manualTopics}
                   onChange={(e) => setManualTopics(e.target.value)}
                   className="min-h-[120px]"

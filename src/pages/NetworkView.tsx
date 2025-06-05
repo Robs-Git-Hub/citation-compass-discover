@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Paper } from '../types/semantic-scholar';
@@ -8,6 +9,7 @@ import PapersNetwork from '../components/PapersNetwork';
 import ErrorMessage from '../components/ErrorMessage';
 import TopicPlottingModal from '../components/TopicPlottingModal';
 import GeminiApiKeyModal from '../components/GeminiApiKeyModal';
+import TopicFilterBar from '../components/TopicFilterBar';
 import { Skeleton } from '../components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Button } from '../components/ui/button';
@@ -20,11 +22,14 @@ const NetworkView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
 
   const {
     selectedPaper,
     firstDegreeCitations,
     geminiApiKey,
+    topics,
+    paperTopics,
     setSelectedPaper,
     setFirstDegreeCitations,
     setGeminiApiKey
@@ -94,6 +99,20 @@ const NetworkView: React.FC = () => {
     setIsTopicModalOpen(true);
   };
 
+  const handleTopicToggle = (topic: string) => {
+    const newSelection = new Set(selectedTopics);
+    if (newSelection.has(topic)) {
+      newSelection.delete(topic);
+    } else {
+      newSelection.add(topic);
+    }
+    setSelectedTopics(newSelection);
+  };
+
+  const handleClearAllTopics = () => {
+    setSelectedTopics(new Set());
+  };
+
   // Convert citations to Paper format to match the expected type
   const convertedCitations: Paper[] = firstDegreeCitations.map(citation => ({
     paperId: citation.paperId,
@@ -109,6 +128,12 @@ const NetworkView: React.FC = () => {
 
   // Combine selected paper and converted citations into a single papers array
   const allPapers: Paper[] = selectedPaper ? [selectedPaper, ...convertedCitations] : convertedCitations;
+
+  // Filter papers based on selected topics
+  const filteredPapers = selectedTopics.size === 0 ? allPapers : allPapers.filter(paper => {
+    const assignedTopics = paperTopics.get(paper.paperId) || [];
+    return assignedTopics.some(topic => selectedTopics.has(topic));
+  });
 
   if (isLoading) {
     return (
@@ -189,9 +214,22 @@ const NetworkView: React.FC = () => {
           </Button>
         </div>
 
+        {/* Topic Filter Bar */}
+        <div className="mb-6">
+          <TopicFilterBar
+            topics={topics}
+            selectedTopics={selectedTopics}
+            onTopicToggle={handleTopicToggle}
+            onClearAll={handleClearAllTopics}
+          />
+        </div>
+
         <PapersNetwork
           selectedPaper={selectedPaper}
-          firstDegreeCitations={firstDegreeCitations}
+          firstDegreeCitations={firstDegreeCitations.filter(citation => 
+            selectedTopics.size === 0 || 
+            (paperTopics.get(citation.paperId) || []).some(topic => selectedTopics.has(topic))
+          )}
           onBackToTable={handleBackToTable}
         />
       </div>
