@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Paper, Citation } from '../types/semantic-scholar';
+import { Paper } from '../types/semantic-scholar';
 import { SemanticScholarService } from '../services/semanticScholar';
 import { useCitationStore } from '../store/citationStore';
 import { ErrorHandler } from '../utils/errorHandler';
@@ -18,13 +18,8 @@ const NetworkView: React.FC = () => {
   const {
     selectedPaper,
     firstDegreeCitations,
-    secondDegreeCitations,
     setSelectedPaper,
-    setFirstDegreeCitations,
-    setSecondDegreeCitations,
-    updateProgress,
-    setIsExpanding,
-    resetStore
+    setFirstDegreeCitations
   } = useCitationStore();
 
   useEffect(() => {
@@ -45,70 +40,27 @@ const NetworkView: React.FC = () => {
     try {
       // Check if we already have the data in store and it matches the current paperId
       if (selectedPaper && selectedPaper.paperId === paperId && firstDegreeCitations.length > 0) {
-        // Data is already available in store
-        await ensureSecondDegreeData();
-      } else {
-        // Need to fetch fresh data
-        resetStore();
-        
-        // First, get paper details
-        const paperResponse = await SemanticScholarService.getPaper(paperId);
-        const paper = paperResponse.data;
-        setSelectedPaper(paper);
-
-        // Get first degree citations
-        const citationsResponse = await SemanticScholarService.getCitations(paperId);
-        const citations = citationsResponse.data;
-        setFirstDegreeCitations(citations);
-
-        // Automatically fetch second degree citations for network view
-        if (citations.length > 0) {
-          setIsExpanding(true);
-          
-          const secondDegreeMap = await SemanticScholarService.getSecondDegreeCitations(
-            citations,
-            updateProgress
-          );
-
-          secondDegreeMap.forEach((citationList, paperId) => {
-            setSecondDegreeCitations(paperId, citationList);
-          });
-
-          setIsExpanding(false);
-        }
+        // Data is already available in store, use it directly
+        setIsLoading(false);
+        return;
       }
+
+      // If we don't have the data, fetch only the basic paper and first-degree citations
+      // First, get paper details
+      const paperResponse = await SemanticScholarService.getPaper(paperId);
+      const paper = paperResponse.data;
+      setSelectedPaper(paper);
+
+      // Get first degree citations
+      const citationsResponse = await SemanticScholarService.getCitations(paperId);
+      const citations = citationsResponse.data;
+      setFirstDegreeCitations(citations);
+
     } catch (err: any) {
       const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const ensureSecondDegreeData = async () => {
-    // Check if we need to fetch second degree data
-    const needsSecondDegree = firstDegreeCitations.some(citation => 
-      citation.citationCount && citation.citationCount > 0 && !secondDegreeCitations.has(citation.paperId)
-    );
-
-    if (needsSecondDegree) {
-      setIsExpanding(true);
-      
-      try {
-        const secondDegreeMap = await SemanticScholarService.getSecondDegreeCitations(
-          firstDegreeCitations,
-          updateProgress
-        );
-
-        secondDegreeMap.forEach((citationList, paperId) => {
-          setSecondDegreeCitations(paperId, citationList);
-        });
-      } catch (err: any) {
-        const appError = ErrorHandler.handleApiError(err);
-        setError(appError.userMessage);
-      } finally {
-        setIsExpanding(false);
-      }
     }
   };
 
