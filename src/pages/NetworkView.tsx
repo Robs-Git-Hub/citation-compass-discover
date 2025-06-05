@@ -7,6 +7,7 @@ import { ErrorHandler } from '../utils/errorHandler';
 import PapersNetwork from '../components/PapersNetwork';
 import ErrorMessage from '../components/ErrorMessage';
 import TopicPlottingModal from '../components/TopicPlottingModal';
+import GeminiApiKeyModal from '../components/GeminiApiKeyModal';
 import { Skeleton } from '../components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Button } from '../components/ui/button';
@@ -18,12 +19,15 @@ const NetworkView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
   const {
     selectedPaper,
     firstDegreeCitations,
+    geminiApiKey,
     setSelectedPaper,
-    setFirstDegreeCitations
+    setFirstDegreeCitations,
+    setGeminiApiKey
   } = useCitationStore();
 
   useEffect(() => {
@@ -74,6 +78,20 @@ const NetworkView: React.FC = () => {
 
   const handleRetry = () => {
     loadNetworkData();
+  };
+
+  const handlePlotTopics = () => {
+    if (!geminiApiKey) {
+      setIsApiKeyModalOpen(true);
+      return;
+    }
+    setIsTopicModalOpen(true);
+  };
+
+  const handleApiKeySubmit = (apiKey: string) => {
+    setGeminiApiKey(apiKey);
+    setIsApiKeyModalOpen(false);
+    setIsTopicModalOpen(true);
   };
 
   // Combine selected paper and citations into a single papers array
@@ -149,7 +167,7 @@ const NetworkView: React.FC = () => {
         {/* Plot Topics Button */}
         <div className="flex justify-center mb-6">
           <Button
-            onClick={() => setIsTopicModalOpen(true)}
+            onClick={handlePlotTopics}
             className="flex items-center gap-2"
             variant="outline"
           >
@@ -165,11 +183,19 @@ const NetworkView: React.FC = () => {
         />
       </div>
 
+      {/* API Key Modal */}
+      <GeminiApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
+        onApiKeySubmit={handleApiKeySubmit}
+      />
+
       {/* Topic Plotting Modal */}
       <TopicPlottingModal
         isOpen={isTopicModalOpen}
         onClose={() => setIsTopicModalOpen(false)}
         papers={allPapers}
+        geminiApiKey={geminiApiKey}
       />
     </div>
   );

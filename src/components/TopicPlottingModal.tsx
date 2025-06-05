@@ -15,13 +15,15 @@ import TopicEditorModal from './TopicEditorModal';
 interface TopicPlottingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  papers: any[]; // Will be properly typed later
+  papers: any[];
+  geminiApiKey: string | null;
 }
 
 const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
   isOpen,
   onClose,
-  papers
+  papers,
+  geminiApiKey
 }) => {
   const [currentView, setCurrentView] = useState<'choice' | 'manual' | 'ai'>('choice');
   const [manualTopics, setManualTopics] = useState('');
@@ -52,24 +54,26 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
   };
 
   const handleAITopics = async () => {
+    if (!geminiApiKey) {
+      console.error('No Gemini API key available');
+      return;
+    }
+
     setIsLoadingAiTopics(true);
     try {
-      // TODO: Get API key from user - for now just simulate
-      const apiKey = 'dummy-key'; // This will be properly implemented later
-      const generatedTopics = await GeminiService.generateTopicsFromPapers(apiKey, papers);
+      // Prepare papers data for the API call
+      const papersData = papers.map(paper => ({
+        title: paper.title || 'Untitled',
+        abstract: paper.abstract || undefined
+      }));
+
+      const generatedTopics = await GeminiService.generateTopicsFromPapers(papersData, geminiApiKey);
       setAiTopics(generatedTopics);
       setIsTopicEditorOpen(true);
     } catch (error) {
       console.error('Failed to generate AI topics:', error);
-      // For now, use some default topics to test the UI
-      setAiTopics([
-        'Machine Learning',
-        'Natural Language Processing',
-        'Computer Vision',
-        'Data Mining',
-        'Neural Networks'
-      ]);
-      setIsTopicEditorOpen(true);
+      // Show user-friendly error message
+      alert('Failed to generate topics. Please check your API key and try again.');
     } finally {
       setIsLoadingAiTopics(false);
     }
@@ -144,7 +148,7 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
                   </label>
                   <Textarea
                     id="topics"
-                    placeholder=""
+                    placeholder="Machine Learning&#10;Natural Language Processing&#10;Computer Vision&#10;Data Mining"
                     value={manualTopics}
                     onChange={(e) => setManualTopics(e.target.value)}
                     className="min-h-[120px]"

@@ -9,6 +9,7 @@ interface CitationStore {
   progress: ProgressState;
   isExpanding: boolean;
   isFetchingAbstracts: boolean;
+  geminiApiKey: string | null;
   
   setSelectedPaper: (paper: Paper | null) => void;
   setFirstDegreeCitations: (citations: Citation[]) => void;
@@ -17,6 +18,7 @@ interface CitationStore {
   setIsExpanding: (expanding: boolean) => void;
   setIsFetchingAbstracts: (fetching: boolean) => void;
   updateCitationAbstract: (paperId: string, abstract: string | null, fetchedViaGemini: boolean) => void;
+  setGeminiApiKey: (apiKey: string) => void;
   resetStore: () => void;
   clearNetworkData: () => void;
 }
@@ -28,6 +30,7 @@ export const useCitationStore = create<CitationStore>((set, get) => ({
   progress: { current: 0, total: 0, isComplete: false },
   isExpanding: false,
   isFetchingAbstracts: false,
+  geminiApiKey: null,
 
   setSelectedPaper: (paper) => set({ selectedPaper: paper }),
 
@@ -73,6 +76,8 @@ export const useCitationStore = create<CitationStore>((set, get) => ({
       };
     }),
 
+  setGeminiApiKey: (apiKey) => set({ geminiApiKey: apiKey }),
+
   resetStore: () => set({
     selectedPaper: null,
     firstDegreeCitations: [],
@@ -80,6 +85,7 @@ export const useCitationStore = create<CitationStore>((set, get) => ({
     progress: { current: 0, total: 0, isComplete: false },
     isExpanding: false,
     isFetchingAbstracts: false,
+    geminiApiKey: null,
   }),
 
   clearNetworkData: () => set({
