@@ -216,7 +216,7 @@ const Index = () => {
             <div className="text-center">
               <Button
                 onClick={handleExpandToSecondDegree}
-                className="bg-accent text-accent-foreground hover:bg-accent/80 px-6 py-3 text-lg"
+                className="bg-accent text-white hover:bg-accent/90 px-6 py-3 text-lg"
                 disabled={isExpanding}
               >
                 {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}

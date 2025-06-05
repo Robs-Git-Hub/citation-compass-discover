@@ -19,11 +19,11 @@ export class ErrorHandler {
 
   static createError(type: ErrorType, message: string, originalError?: any): AppError {
     const userMessages = {
-      [ErrorType.NETWORK]: 'Unable to connect to the service. Please check your internet connection and try again.',
-      [ErrorType.API]: 'The service is temporarily unavailable. Please try again in a moment.',
+      [ErrorType.NETWORK]: 'Please try again in a moment.',
+      [ErrorType.API]: 'Please try again in a moment.',
       [ErrorType.VALIDATION]: 'Please check your input and try again.',
       [ErrorType.RATE_LIMIT]: 'Too many requests. Please wait a moment before trying again.',
-      [ErrorType.UNKNOWN]: 'An unexpected error occurred. Please try again.'
+      [ErrorType.UNKNOWN]: 'Please try again in a moment.'
     };
 
     const error: AppError = {
