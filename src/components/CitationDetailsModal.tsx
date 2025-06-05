@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer';
 import { Citation } from '../types/semantic-scholar';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, FileText } from 'lucide-react';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import AbstractModal from './AbstractModal';
 
 interface CitationDetailsModalProps {
   isOpen: boolean;
@@ -20,6 +21,13 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
   paperTitle
 }) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [abstractPaper, setAbstractPaper] = useState<Citation | null>(null);
+  const [isAbstractModalOpen, setIsAbstractModalOpen] = useState(false);
+
+  const handleAbstractClick = (citation: Citation) => {
+    setAbstractPaper(citation);
+    setIsAbstractModalOpen(true);
+  };
 
   const content = (
     <div className="space-y-4">
@@ -64,20 +72,38 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
                 <div className="text-xs text-gray-500">{citation.venue}</div>
               )}
               
-              {citation.url && (
-                <a
-                  href={citation.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-[#437e84] hover:text-[#2d5a5f] text-xs"
-                >
-                  View paper <ExternalLink className="h-3 w-3 ml-1" />
-                </a>
-              )}
+              <div className="flex items-center space-x-3 pt-1">
+                {citation.url && (
+                  <a
+                    href={citation.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-[#437e84] hover:text-[#2d5a5f] text-xs"
+                  >
+                    View paper <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                )}
+                {citation.abstract && (
+                  <button
+                    onClick={() => handleAbstractClick(citation)}
+                    className="inline-flex items-center text-[#437e84] hover:text-[#2d5a5f] text-xs"
+                  >
+                    Abstract <FileText className="h-3 w-3 ml-1" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {abstractPaper && (
+        <AbstractModal
+          isOpen={isAbstractModalOpen}
+          onClose={() => setIsAbstractModalOpen(false)}
+          paper={abstractPaper}
+        />
+      )}
     </div>
   );
 

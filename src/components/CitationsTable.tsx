@@ -1,9 +1,9 @@
-
 import React, { useState, useMemo } from 'react';
 import { Citation } from '../types/semantic-scholar';
-import { ArrowUp, ArrowDown, ExternalLink } from 'lucide-react';
+import { ArrowUp, ArrowDown, FileText } from 'lucide-react';
 import { useCitationStore } from '../store/citationStore';
 import CitationDetailsModal from './CitationDetailsModal';
+import AbstractModal from './AbstractModal';
 
 interface CitationsTableProps {
   citations: Citation[];
@@ -18,6 +18,8 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [selectedPaper, setSelectedPaper] = useState<Citation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [abstractPaper, setAbstractPaper] = useState<Citation | null>(null);
+  const [isAbstractModalOpen, setIsAbstractModalOpen] = useState(false);
 
   const { secondDegreeCitations } = useCitationStore();
 
@@ -36,6 +38,11 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
       setSelectedPaper(citation);
       setIsModalOpen(true);
     }
+  };
+
+  const handleAbstractClick = (citation: Citation) => {
+    setAbstractPaper(citation);
+    setIsAbstractModalOpen(true);
   };
 
   const sortedCitations = useMemo(() => {
@@ -127,13 +134,13 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                     <SortButton field="year">Year</SortButton>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Venue
+                    Published In
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <SortButton field="citationCount">Citations</SortButton>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Link
+                    Abstract
                   </th>
                 </tr>
               </thead>
@@ -186,15 +193,13 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {citation.url && (
-                          <a
-                            href={citation.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        {citation.abstract && (
+                          <button
+                            onClick={() => handleAbstractClick(citation)}
                             className="text-[#437e84] hover:text-[#2d5a5f] inline-flex items-center"
                           >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
+                            <FileText className="h-4 w-4" />
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -212,6 +217,14 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
           onClose={() => setIsModalOpen(false)}
           citations={secondDegreeCitations.get(selectedPaper.paperId) || []}
           paperTitle={selectedPaper.title || 'Untitled'}
+        />
+      )}
+
+      {abstractPaper && (
+        <AbstractModal
+          isOpen={isAbstractModalOpen}
+          onClose={() => setIsAbstractModalOpen(false)}
+          paper={abstractPaper}
         />
       )}
     </>

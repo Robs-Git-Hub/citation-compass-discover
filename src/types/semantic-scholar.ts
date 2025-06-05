@@ -12,6 +12,7 @@ export interface Paper {
   venue?: string;
   citationCount?: number;
   url?: string;
+  abstract?: string;
 }
 
 export interface Citation {
@@ -22,6 +23,7 @@ export interface Citation {
   venue?: string;
   citationCount?: number;
   url?: string;
+  abstract?: string;
   secondDegreeCitations?: Citation[];
   isExpanded?: boolean;
 }
