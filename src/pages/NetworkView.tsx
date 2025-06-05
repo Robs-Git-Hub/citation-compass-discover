@@ -7,15 +7,18 @@ import { useCitationStore } from '../store/citationStore';
 import { ErrorHandler } from '../utils/errorHandler';
 import PapersNetwork from '../components/PapersNetwork';
 import ErrorMessage from '../components/ErrorMessage';
+import TopicPlottingModal from '../components/TopicPlottingModal';
 import { Skeleton } from '../components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Table, Network } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Table, Network, Tag } from 'lucide-react';
 
 const NetworkView: React.FC = () => {
   const { paperId } = useParams<{ paperId: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
 
   const {
     selectedPaper,
@@ -141,12 +144,30 @@ const NetworkView: React.FC = () => {
           </Tabs>
         </div>
 
+        {/* Plot Topics Button */}
+        <div className="flex justify-center mb-6">
+          <Button
+            onClick={() => setIsTopicModalOpen(true)}
+            className="flex items-center gap-2"
+            variant="outline"
+          >
+            <Tag className="h-4 w-4" />
+            Plot Topics
+          </Button>
+        </div>
+
         <PapersNetwork
           selectedPaper={selectedPaper}
           firstDegreeCitations={firstDegreeCitations}
           onBackToTable={handleBackToTable}
         />
       </div>
+
+      {/* Topic Plotting Modal */}
+      <TopicPlottingModal
+        isOpen={isTopicModalOpen}
+        onClose={() => setIsTopicModalOpen(false)}
+      />
     </div>
   );
 };
