@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Citation } from '../types/semantic-scholar';
 import { ArrowUp, ArrowDown, FileText } from 'lucide-react';
@@ -12,6 +13,14 @@ interface CitationsTableProps {
 
 type SortField = 'title' | 'year' | 'citationCount' | 'authors';
 type SortDirection = 'asc' | 'desc';
+
+// Constants for magic values
+const DEFAULT_EMPTY_STRING = '';
+const DEFAULT_NUMBER_VALUE = 0;
+const NOT_AVAILABLE_TEXT = 'N/A';
+
+// Common class constants
+const COMMON_TH_CLASSES = "px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider";
 
 const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading }) => {
   const [sortField, setSortField] = useState<SortField>('year');
@@ -47,25 +56,25 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
 
   const sortedCitations = useMemo(() => {
     return [...citations].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortField) {
         case 'title':
-          aValue = a.title?.toLowerCase() || '';
-          bValue = b.title?.toLowerCase() || '';
+          aValue = a.title?.toLowerCase() || DEFAULT_EMPTY_STRING;
+          bValue = b.title?.toLowerCase() || DEFAULT_EMPTY_STRING;
           break;
         case 'year':
-          aValue = a.year || 0;
-          bValue = b.year || 0;
+          aValue = a.year || DEFAULT_NUMBER_VALUE;
+          bValue = b.year || DEFAULT_NUMBER_VALUE;
           break;
         case 'citationCount':
-          aValue = a.citationCount || 0;
-          bValue = b.citationCount || 0;
+          aValue = a.citationCount || DEFAULT_NUMBER_VALUE;
+          bValue = b.citationCount || DEFAULT_NUMBER_VALUE;
           break;
         case 'authors':
-          aValue = a.authors?.[0]?.name?.toLowerCase() || '';
-          bValue = b.authors?.[0]?.name?.toLowerCase() || '';
+          aValue = a.authors?.[0]?.name?.toLowerCase() || DEFAULT_EMPTY_STRING;
+          bValue = b.authors?.[0]?.name?.toLowerCase() || DEFAULT_EMPTY_STRING;
           break;
         default:
           return 0;
@@ -82,7 +91,7 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
   const SortButton: React.FC<{ field: SortField; children: React.ReactNode }> = ({ field, children }) => (
     <button
       onClick={() => handleSort(field)}
-      className="flex items-center space-x-1 font-medium text-gray-700 hover:text-[#437e84] focus:outline-none focus:text-[#437e84]"
+      className="flex items-center space-x-1 font-medium text-gray-700 hover:text-brand-primary focus:outline-none focus:text-brand-primary"
     >
       <span>{children}</span>
       {sortField === field && (
@@ -124,22 +133,22 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={COMMON_TH_CLASSES}>
                     <SortButton field="title">Title</SortButton>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={COMMON_TH_CLASSES}>
                     <SortButton field="authors">Authors</SortButton>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={COMMON_TH_CLASSES}>
                     <SortButton field="year">Year</SortButton>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={COMMON_TH_CLASSES}>
                     Published In
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={COMMON_TH_CLASSES}>
                     <SortButton field="citationCount">Citations</SortButton>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className={COMMON_TH_CLASSES}>
                     Abstract
                   </th>
                 </tr>
@@ -148,7 +157,7 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                 {sortedCitations.map((citation) => {
                   const hasSecondDegree = secondDegreeCitations.has(citation.paperId);
                   const secondDegreeCount = secondDegreeCitations.get(citation.paperId)?.length || 0;
-                  const totalCitations = citation.citationCount || 0;
+                  const totalCitations = citation.citationCount || DEFAULT_NUMBER_VALUE;
                   
                   return (
                     <tr key={citation.paperId} className="hover:bg-gray-50">
@@ -159,7 +168,7 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                               href={citation.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-gray-900 hover:text-[#437e84] transition-colors"
+                              className="text-gray-900 hover:text-brand-primary transition-colors"
                             >
                               {citation.title || 'Untitled'}
                             </a>
@@ -175,16 +184,16 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {citation.year || 'N/A'}
+                        {citation.year || NOT_AVAILABLE_TEXT}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {citation.venue || 'N/A'}
+                        {citation.venue || NOT_AVAILABLE_TEXT}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {hasSecondDegree && secondDegreeCount > 0 ? (
                           <button
                             onClick={() => handleCitationCountClick(citation)}
-                            className="text-[#437e84] hover:text-[#2d5a5f] hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-[#437e84] focus:ring-offset-1 rounded px-1"
+                            className="text-brand-primary hover:text-brand-primary-hover hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 rounded px-1"
                           >
                             {secondDegreeCount}/{totalCitations}
                           </button>
@@ -195,8 +204,9 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {citation.abstract && (
                           <button
+                            aria-label="View Abstract"
                             onClick={() => handleAbstractClick(citation)}
-                            className="text-[#437e84] hover:text-[#2d5a5f] inline-flex items-center"
+                            className="text-brand-primary hover:text-brand-primary-hover inline-flex items-center"
                           >
                             <FileText className="h-4 w-4" />
                           </button>
