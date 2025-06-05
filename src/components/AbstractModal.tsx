@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer';
+import { Dialog, DialogContent } from './ui/dialog';
+import { Drawer, DrawerContent } from './ui/drawer';
 import { Citation } from '../types/semantic-scholar';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
@@ -23,18 +23,17 @@ const AbstractModal: React.FC<AbstractModalProps> = ({
       <div className="space-y-2">
         <h3 className="text-lg font-semibold text-gray-900">{paper.title}</h3>
         
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 space-y-1">
           <div>
             {paper.authors?.slice(0, 5).map(author => author.name).join(', ')}
             {paper.authors && paper.authors.length > 5 && ' et al.'}
           </div>
           
-          <div className="flex items-center justify-between mt-1">
-            <span>{paper.year || 'N/A'}</span>
-            {paper.venue && (
-              <span className="text-xs text-gray-500">{paper.venue}</span>
-            )}
-          </div>
+          <div>{paper.year || 'N/A'}</div>
+          
+          {paper.venue && (
+            <div>{paper.venue}</div>
+          )}
         </div>
       </div>
       
@@ -51,10 +50,7 @@ const AbstractModal: React.FC<AbstractModalProps> = ({
     return (
       <Drawer open={isOpen} onOpenChange={onClose}>
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Paper Details</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-4">
+          <div className="px-4 py-4">
             {content}
           </div>
         </DrawerContent>
@@ -65,9 +61,6 @@ const AbstractModal: React.FC<AbstractModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>Paper Details</DialogTitle>
-        </DialogHeader>
         {content}
       </DialogContent>
     </Dialog>

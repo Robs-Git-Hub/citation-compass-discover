@@ -35,7 +35,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, isVisible }) => {
           )}
           
           {progress.isComplete && (
-            <p className="text-sm text-green-600 font-medium">
+            <p className="text-sm text-[#437e84] font-medium">
               ✓ 2nd degree citation expansion completed
             </p>
           )}
