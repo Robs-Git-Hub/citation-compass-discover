@@ -1,6 +1,5 @@
 
 import { SearchResponse, CitationsResponse, ProgressState, Paper } from '../types/semantic-scholar';
-import { ErrorHandler, ErrorType } from '../utils/errorHandler';
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1';
 
@@ -58,7 +57,11 @@ class RateLimiter {
         }
       }
     }
-    throw ErrorHandler.createError(ErrorType.RATE_LIMIT, 'Max retries exceeded due to rate limiting');
+    
+    // If we get here, we've exhausted retries
+    const error = new Error('Max retries exceeded due to rate limiting');
+    (error as any).status = 429;
+    throw error;
   }
 
   private sleep(ms: number): Promise<void> {
@@ -72,21 +75,21 @@ export class SemanticScholarService {
   static async searchPapers(query: string, limit: number = 10): Promise<SearchResponse> {
     const url = `${BASE_URL}/paper/search?query=${encodeURIComponent(query)}&limit=${limit}&fields=${PAPER_FIELDS}`;
     
+    if (import.meta.env.DEV) {
+      console.log(`Searching papers with query: "${query}"`);
+    }
+    
     return this.rateLimiter.executeWithBackoff(async () => {
-      try {
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          const error = new Error(`Search failed: ${response.statusText}`);
-          (error as any).status = response.status;
-          (error as any).headers = response.headers;
-          throw error;
-        }
-        
-        return await response.json();
-      } catch (error) {
-        throw ErrorHandler.handleApiError(error);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const error = new Error(`Search failed: ${response.statusText}`);
+        (error as any).status = response.status;
+        (error as any).headers = response.headers;
+        throw error;
       }
+      
+      return await response.json();
     });
   }
 
@@ -94,21 +97,17 @@ export class SemanticScholarService {
     const url = `${BASE_URL}/paper/${paperId}?fields=${PAPER_FIELDS}`;
     
     return this.rateLimiter.executeWithBackoff(async () => {
-      try {
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          const error = new Error(`Paper fetch failed: ${response.statusText}`);
-          (error as any).status = response.status;
-          (error as any).headers = response.headers;
-          throw error;
-        }
-        
-        const data = await response.json();
-        return { data };
-      } catch (error) {
-        throw ErrorHandler.handleApiError(error);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const error = new Error(`Paper fetch failed: ${response.statusText}`);
+        (error as any).status = response.status;
+        (error as any).headers = response.headers;
+        throw error;
       }
+      
+      const data = await response.json();
+      return { data };
     });
   }
 
@@ -121,37 +120,33 @@ export class SemanticScholarService {
     while (true) {
       const url = `${BASE_URL}/paper/${paperId}/citations?limit=${pageSize}&offset=${offset}&fields=${PAPER_FIELDS}`;
       
-      try {
-        const response = await this.rateLimiter.executeWithBackoff(async () => {
-          const response = await fetch(url);
-          
-          if (!response.ok) {
-            const error = new Error(`Citations fetch failed: ${response.statusText}`);
-            (error as any).status = response.status;
-            (error as any).headers = response.headers;
-            throw error;
-          }
-          
-          return await response.json();
-        });
-
-        // Transform the response to match our Citation interface
-        const transformedData = response.data.map((item: any) => ({
-          ...item.citingPaper,
-          paperId: item.citingPaper.paperId
-        }));
-
-        allCitations.push(...transformedData);
-
-        // Check if we've reached the requested limit or if there are no more results
-        if (allCitations.length >= limit || transformedData.length < pageSize || !response.next) {
-          break;
+      const response = await this.rateLimiter.executeWithBackoff(async () => {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          const error = new Error(`Citations fetch failed: ${response.statusText}`);
+          (error as any).status = response.status;
+          (error as any).headers = response.headers;
+          throw error;
         }
+        
+        return await response.json();
+      });
 
-        offset += pageSize;
-      } catch (error) {
-        throw ErrorHandler.handleApiError(error);
+      // Transform the response to match our Citation interface
+      const transformedData = response.data.map((item: any) => ({
+        ...item.citingPaper,
+        paperId: item.citingPaper.paperId
+      }));
+
+      allCitations.push(...transformedData);
+
+      // Check if we've reached the requested limit or if there are no more results
+      if (allCitations.length >= limit || transformedData.length < pageSize || !response.next) {
+        break;
       }
+
+      offset += pageSize;
     }
 
     // Trim to requested limit
@@ -194,14 +189,12 @@ export class SemanticScholarService {
         const response = await this.getCitations(citation.paperId, 100);
         secondDegreeMap.set(citation.paperId, response.data);
       } catch (error) {
-        const appError = ErrorHandler.handleApiError(error);
-        
         // Continue with other papers even if one fails
         secondDegreeMap.set(citation.paperId, []);
         
         // Only log the error, don't break the entire process
         if (import.meta.env.DEV) {
-          console.error(`Failed to fetch citations for ${citation.paperId}:`, appError);
+          console.error(`Failed to fetch citations for ${citation.paperId}:`, error);
         }
       }
     }

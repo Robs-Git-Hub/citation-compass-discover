@@ -52,10 +52,22 @@ const Index = () => {
     resetStore();
 
     try {
+      if (import.meta.env.DEV) {
+        console.log(`Starting search for: "${query}"`);
+      }
+      
       const response = await SemanticScholarService.searchPapers(query);
       setSearchResults(response.data);
       setShowResults(true);
+      
+      if (import.meta.env.DEV) {
+        console.log(`Search completed successfully, found ${response.data.length} papers`);
+      }
     } catch (err: any) {
+      if (import.meta.env.DEV) {
+        console.error('Search error:', err);
+      }
+      
       const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
@@ -75,6 +87,10 @@ const Index = () => {
       setCitations(response.data);
       setFirstDegreeCitations(response.data);
     } catch (err: any) {
+      if (import.meta.env.DEV) {
+        console.error('Citations fetch error:', err);
+      }
+      
       const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
@@ -102,6 +118,10 @@ const Index = () => {
         console.log('2nd degree expansion completed');
       }
     } catch (err: any) {
+      if (import.meta.env.DEV) {
+        console.error('Second degree expansion error:', err);
+      }
+      
       const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
