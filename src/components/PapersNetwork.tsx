@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -8,12 +7,6 @@ import { Paper, Citation } from '../types/semantic-scholar';
 import { useCitationStore } from '../store/citationStore';
 import PaperDetailsModal from './PaperDetailsModal';
 import { RotateCcw, Target, ArrowLeft } from 'lucide-react';
-
-interface PapersNetworkProps {
-  selectedPaper: Paper;
-  firstDegreeCitations: Citation[];
-  onBackToTable: () => void;
-}
 
 interface NetworkNode {
   id: string;
@@ -32,6 +25,12 @@ interface NetworkNode {
 interface NetworkEdge {
   source: string;
   target: string;
+}
+
+interface PapersNetworkProps {
+  selectedPaper: Paper;
+  firstDegreeCitations: Citation[];
+  onBackToTable: () => void;
 }
 
 const PapersNetwork: React.FC<PapersNetworkProps> = ({
@@ -205,8 +204,6 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
             nodeBorderColor={{ from: 'color', modifiers: [['darker', 0.8]] }}
             linkThickness={2}
             linkColor="#999999"
-            enableLinkArrows={true}
-            linkArrowsScale={1}
             onClick={handleNodeClick}
             nodeTooltip={({ node }) => (
               <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 max-w-xs">
