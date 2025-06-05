@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, AlertCircle } from 'lucide-react';
 import { InputValidator } from '../utils/validation';
@@ -55,7 +54,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
             value={query}
             onChange={handleInputChange}
             placeholder="Enter paper title to find citations..."
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[#437e84] focus:border-[#437e84] text-gray-900 ${
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-gray-900 ${
               validationError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
             }`}
             disabled={isLoading}

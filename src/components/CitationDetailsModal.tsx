@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer';
@@ -44,7 +43,7 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
                   href={citation.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-900 hover:text-[#437e84] transition-colors"
+                  className="text-gray-900 hover:text-brand-primary transition-colors"
                 >
                   {citation.title || 'Untitled'}
                 </a>
@@ -78,7 +77,7 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
                     href={citation.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-[#437e84] hover:text-[#2d5a5f] text-xs"
+                    className="inline-flex items-center text-brand-primary hover:text-brand-primary-hover text-xs"
                   >
                     View paper <ExternalLink className="h-3 w-3 ml-1" />
                   </a>
@@ -86,7 +85,7 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
                 {citation.abstract && (
                   <button
                     onClick={() => handleAbstractClick(citation)}
-                    className="inline-flex items-center text-[#437e84] hover:text-[#2d5a5f] text-xs"
+                    className="inline-flex items-center text-brand-primary hover:text-brand-primary-hover text-xs"
                   >
                     Abstract <FileText className="h-3 w-3 ml-1" />
                   </button>

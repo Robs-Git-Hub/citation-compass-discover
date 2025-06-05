@@ -8,6 +8,9 @@ import { useCitationStore } from '../store/citationStore';
 import PaperDetailsModal from './PaperDetailsModal';
 import { RotateCcw, Target, ArrowLeft } from 'lucide-react';
 
+// Brand color constant for JavaScript usage
+const EGO_NODE_COLOR = '#437e84';
+
 interface NetworkNode {
   id: string;
   title: string;
@@ -47,7 +50,7 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
     const nodes: NetworkNode[] = [];
     const edges: NetworkEdge[] = [];
 
-    // Add ego node (selected paper)
+    // Add ego node (selected paper) - using the constant for color
     nodes.push({
       id: selectedPaper.paperId,
       title: selectedPaper.title,
@@ -60,7 +63,7 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
       abstract: selectedPaper.abstract,
       degreeType: 'ego',
       radius: 20,
-      color: '#437e84'
+      color: EGO_NODE_COLOR
     });
 
     // Add first degree nodes and edges

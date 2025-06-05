@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
@@ -211,7 +210,7 @@ const Index = () => {
                       href={selectedPaper.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-900 hover:text-[#437e84] transition-colors"
+                      className="text-gray-900 hover:text-brand-primary transition-colors"
                     >
                       {selectedPaper.title}
                     </a>
@@ -230,13 +229,13 @@ const Index = () => {
           </div>
         )}
 
-        {/* Action Button - Only show Expand to 2nd Degree button with accent color */}
+        {/* Action Button - Only show Expand to 2nd Degree button with brand color */}
         {canExpandToSecondDegree && (
           <div className="w-full max-w-6xl mx-auto mt-6">
             <div className="text-center">
               <Button
                 onClick={handleExpandToSecondDegree}
-                className="bg-accent text-white hover:bg-accent/90 px-6 py-3 text-lg"
+                className="bg-brand-primary text-white hover:bg-brand-primary-hover px-6 py-3 text-lg"
                 disabled={isExpanding}
               >
                 {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
@@ -273,7 +272,7 @@ const Index = () => {
       <footer className="bg-white border-t border-gray-200 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center text-sm text-gray-500">
-            Powered by <a href="https://www.semanticscholar.org/" target="_blank" rel="noopener noreferrer" className="text-[#437e84] hover:text-[#2d5a5f]">Semantic Scholar API</a>
+            Powered by <a href="https://www.semanticscholar.org/" target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:text-brand-primary-hover">Semantic Scholar API</a>
           </div>
         </div>
       </footer>
