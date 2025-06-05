@@ -12,8 +12,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
   const [query, setQuery] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setValidationError(null);
 
     if (!query.trim()) {
@@ -42,9 +42,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
     <div className="w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit}>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
+          <button
+            type="button"
+            onClick={() => handleSubmit()}
+            disabled={isLoading}
+            className="absolute inset-y-0 left-0 pl-3 flex items-center hover:bg-gray-100 rounded-l-lg transition-colors disabled:hover:bg-transparent"
+          >
+            <Search className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+          </button>
           <input
             type="text"
             value={query}
