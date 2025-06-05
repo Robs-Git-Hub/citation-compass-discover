@@ -216,10 +216,11 @@ const Index = () => {
             )
           );
 
-          // Check if Gemini responded with "Abstract not found"
+          // Check if Gemini responded with "Abstract not found" OR if abstract is too short
           const isAbstractNotFound = /abstract\s+not\s+found/i.test(abstractText.trim());
+          const isTooShort = abstractText.trim().length < 30;
           
-          if (isAbstractNotFound) {
+          if (isAbstractNotFound || isTooShort) {
             // Mark as unavailable in localStorage and store
             AbstractStorage.markAsUnavailable(citation.paperId);
             updateCitationAbstract(citation.paperId, null, true);
@@ -231,7 +232,7 @@ const Index = () => {
             });
             
             if (import.meta.env.DEV) {
-              console.log(`Abstract not found for: ${citation.title}`);
+              console.log(`Abstract not found or too short for: ${citation.title}`);
             }
           } else {
             // Store the found abstract
@@ -240,7 +241,8 @@ const Index = () => {
             results.push({
               paperId: citation.paperId,
               title: citation.title || 'Untitled',
-              status: 'success'
+              status: 'success',
+              abstract: abstractText
             });
             
             if (import.meta.env.DEV) {
