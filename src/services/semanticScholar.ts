@@ -89,6 +89,28 @@ export class SemanticScholarService {
     });
   }
 
+  static async getPaper(paperId: string): Promise<{ data: Paper }> {
+    const url = `${BASE_URL}/paper/${paperId}?fields=${PAPER_FIELDS}`;
+    
+    return this.rateLimiter.executeWithBackoff(async () => {
+      try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          const error = new Error(`Paper fetch failed: ${response.statusText}`);
+          (error as any).status = response.status;
+          (error as any).headers = response.headers;
+          throw error;
+        }
+        
+        const data = await response.json();
+        return { data };
+      } catch (error) {
+        throw ErrorHandler.handleApiError(error);
+      }
+    });
+  }
+
   static async getCitations(paperId: string, limit: number = 100): Promise<CitationsResponse> {
     // Get all citations by handling pagination
     const allCitations: any[] = [];

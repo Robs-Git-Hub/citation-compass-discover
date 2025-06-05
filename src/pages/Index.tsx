@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import PaperSelector from '../components/PaperSelector';
 import CitationsTable from '../components/CitationsTable';
@@ -10,8 +10,10 @@ import { SemanticScholarService } from '../services/semanticScholar';
 import { useCitationStore } from '../store/citationStore';
 import { Button } from '../components/ui/button';
 import { ErrorHandler, ErrorType, AppError } from '../utils/errorHandler';
+import { Network } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [searchResults, setSearchResults] = useState<Paper[]>([]);
   const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
   const [citations, setCitations] = useState<Citation[]>([]);
@@ -97,6 +99,12 @@ const Index = () => {
     }
   };
 
+  const handleViewNetwork = () => {
+    if (selectedPaper) {
+      navigate(`/paper/${selectedPaper.paperId}/network`);
+    }
+  };
+
   const handleRetry = () => {
     setError(null);
     if (selectedPaper) {
@@ -108,6 +116,8 @@ const Index = () => {
     citations.some(c => c.citationCount && c.citationCount > 0) && 
     !isExpanding && 
     !progress.isComplete;
+
+  const canViewNetwork = citations.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,20 +175,40 @@ const Index = () => {
           </div>
         )}
 
-        {/* Expand to 2nd Degree Button */}
-        {canExpandToSecondDegree && (
+        {/* Action Buttons */}
+        {(canExpandToSecondDegree || canViewNetwork) && (
           <div className="w-full max-w-6xl mx-auto mt-6">
-            <div className="text-center">
-              <Button
-                onClick={handleExpandToSecondDegree}
-                className="bg-[#437e84] hover:bg-[#2d5a5f] text-white px-6 py-3 text-lg"
-                disabled={isExpanding}
-              >
-                {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
-              </Button>
-              <p className="text-sm text-gray-600 mt-2">
-                This will find papers that cite the papers shown below
-              </p>
+            <div className="text-center space-y-4">
+              {canViewNetwork && (
+                <div>
+                  <Button
+                    onClick={handleViewNetwork}
+                    className="bg-[#437e84] hover:bg-[#2d5a5f] text-white px-6 py-3 text-lg mr-4"
+                  >
+                    <Network className="h-5 w-5 mr-2" />
+                    Papers Network
+                  </Button>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Visualize citation relationships in an interactive network graph
+                  </p>
+                </div>
+              )}
+              
+              {canExpandToSecondDegree && (
+                <div>
+                  <Button
+                    onClick={handleExpandToSecondDegree}
+                    variant="outline"
+                    className="px-6 py-3 text-lg"
+                    disabled={isExpanding}
+                  >
+                    {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
+                  </Button>
+                  <p className="text-sm text-gray-600 mt-2">
+                    This will find papers that cite the papers shown below
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
