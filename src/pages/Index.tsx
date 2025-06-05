@@ -232,11 +232,6 @@ const Index = () => {
   };
 
   const eligibleCitations = getEligibleCitationsForAbstractFetch();
-  const canFetchAbstracts = eligibleCitations.length > 0 && 
-    !isExpanding && 
-    !isLoadingCitations && 
-    !isFetchingAbstracts &&
-    geminiApiKey.length > 0;
   
   const canExpandToSecondDegree = firstDegreeCitations.length > 0 && 
     firstDegreeCitations.some(c => c.citationCount && c.citationCount > 0) && 
@@ -341,7 +336,7 @@ const Index = () => {
                   <Button
                     onClick={handleFetchMissingAbstracts}
                     className="bg-brand-primary text-white hover:bg-brand-primary-hover px-6 py-3 text-lg mr-4"
-                    disabled={!canFetchAbstracts}
+                    disabled={false}
                   >
                     <FileText className="h-5 w-5 mr-2" />
                     {isFetchingAbstracts ? 'Fetching Abstracts...' : 'Fetch Missing Abstracts'}
