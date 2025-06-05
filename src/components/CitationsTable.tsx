@@ -152,7 +152,7 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                               href={citation.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[#437e84] hover:text-[#2d5a5f] hover:underline"
+                              className="text-gray-900 hover:text-[#437e84] transition-colors"
                             >
                               {citation.title || 'Untitled'}
                             </a>

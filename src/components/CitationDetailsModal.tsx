@@ -29,14 +29,14 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
       
       <div className="max-h-96 overflow-y-auto space-y-3">
         {citations.map((citation) => (
-          <div key={citation.paperId} className="border border-gray-200 rounded-lg p-4">
+          <div key={citation.paperId} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
             <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">
               {citation.url ? (
                 <a
                   href={citation.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#437e84] hover:text-[#2d5a5f] hover:underline"
+                  className="text-gray-900 hover:text-[#437e84] transition-colors"
                 >
                   {citation.title || 'Untitled'}
                 </a>

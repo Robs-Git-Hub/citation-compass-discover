@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import SearchBar from '../components/SearchBar';
 import PaperSelector from '../components/PaperSelector';
@@ -145,7 +146,7 @@ const Index = () => {
                       href={selectedPaper.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#437e84] hover:text-[#2d5a5f] hover:underline"
+                      className="text-gray-900 hover:text-[#437e84] transition-colors"
                     >
                       {selectedPaper.title}
                     </a>
