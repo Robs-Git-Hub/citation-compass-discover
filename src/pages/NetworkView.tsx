@@ -94,8 +94,21 @@ const NetworkView: React.FC = () => {
     setIsTopicModalOpen(true);
   };
 
-  // Combine selected paper and citations into a single papers array
-  const allPapers = selectedPaper ? [selectedPaper, ...firstDegreeCitations] : firstDegreeCitations;
+  // Convert citations to Paper format to match the expected type
+  const convertedCitations: Paper[] = firstDegreeCitations.map(citation => ({
+    paperId: citation.paperId,
+    title: citation.title || 'Untitled', // Ensure title is never undefined
+    authors: citation.authors,
+    year: citation.year,
+    venue: citation.venue,
+    citationCount: citation.citationCount,
+    url: citation.url,
+    abstract: citation.abstract || undefined,
+    externalIds: citation.externalIds
+  }));
+
+  // Combine selected paper and converted citations into a single papers array
+  const allPapers: Paper[] = selectedPaper ? [selectedPaper, ...convertedCitations] : convertedCitations;
 
   if (isLoading) {
     return (
