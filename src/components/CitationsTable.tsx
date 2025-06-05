@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Citation } from '../types/semantic-scholar';
 import { ArrowUp, ArrowDown, FileText } from 'lucide-react';
@@ -11,7 +10,7 @@ interface CitationsTableProps {
   isLoading: boolean;
 }
 
-type SortField = 'title' | 'year' | 'citationCount' | 'authors';
+type SortField = 'title' | 'year' | 'citationCount' | 'authors' | 'venue' | 'abstract';
 type SortDirection = 'asc' | 'desc';
 
 // Constants for magic values
@@ -75,6 +74,15 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
         case 'authors':
           aValue = a.authors?.[0]?.name?.toLowerCase() || DEFAULT_EMPTY_STRING;
           bValue = b.authors?.[0]?.name?.toLowerCase() || DEFAULT_EMPTY_STRING;
+          break;
+        case 'venue':
+          aValue = a.venue?.toLowerCase() || DEFAULT_EMPTY_STRING;
+          bValue = b.venue?.toLowerCase() || DEFAULT_EMPTY_STRING;
+          break;
+        case 'abstract':
+          // Sort by whether abstract exists (papers with abstracts first when desc)
+          aValue = a.abstract ? 1 : 0;
+          bValue = b.abstract ? 1 : 0;
           break;
         default:
           return 0;
@@ -143,13 +151,13 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                     <SortButton field="year">Year</SortButton>
                   </th>
                   <th className={COMMON_TH_CLASSES}>
-                    Published In
+                    <SortButton field="venue">Published In</SortButton>
                   </th>
                   <th className={COMMON_TH_CLASSES}>
                     <SortButton field="citationCount">Citations</SortButton>
                   </th>
                   <th className={COMMON_TH_CLASSES}>
-                    Abstract
+                    <SortButton field="abstract">Abstract</SortButton>
                   </th>
                 </tr>
               </thead>
