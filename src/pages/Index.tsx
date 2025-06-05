@@ -42,7 +42,7 @@ const Index = () => {
       setSearchResults(response.data);
       setShowResults(true);
     } catch (err: any) {
-      const appError = err instanceof Error && 'type' in err ? err as AppError : ErrorHandler.handleApiError(err);
+      const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
       setIsSearching(false);
@@ -61,7 +61,7 @@ const Index = () => {
       setCitations(response.data);
       setFirstDegreeCitations(response.data);
     } catch (err: any) {
-      const appError = err instanceof Error && 'type' in err ? err as AppError : ErrorHandler.handleApiError(err);
+      const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
       setIsLoadingCitations(false);
@@ -89,7 +89,7 @@ const Index = () => {
         console.log('2nd degree expansion completed');
       }
     } catch (err: any) {
-      const appError = err instanceof Error && 'type' in err ? err as AppError : ErrorHandler.handleApiError(err);
+      const appError = ErrorHandler.handleApiError(err);
       setError(appError.userMessage);
     } finally {
       setIsExpanding(false);
