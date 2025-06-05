@@ -1,10 +1,9 @@
-
 import { SearchResponse, CitationsResponse, ProgressState, Paper } from '../types/semantic-scholar';
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1';
 
-// Fields to request from the API - now including abstract
-const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract';
+// Fields to request from the API - now including DOI
+const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,doi';
 
 class RateLimiter {
   private lastRequestTime = 0;
