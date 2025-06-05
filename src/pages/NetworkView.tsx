@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Paper } from '../types/semantic-scholar';
@@ -202,28 +201,6 @@ const NetworkView: React.FC = () => {
           </Tabs>
         </div>
 
-        {/* Plot Topics Button */}
-        <div className="flex justify-center mb-6">
-          <Button
-            onClick={handlePlotTopics}
-            className="flex items-center gap-2"
-            variant="outline"
-          >
-            <Tag className="h-4 w-4" />
-            Plot Topics
-          </Button>
-        </div>
-
-        {/* Topic Filter Bar */}
-        <div className="mb-6">
-          <TopicFilterBar
-            topics={topics}
-            selectedTopics={selectedTopics}
-            onTopicToggle={handleTopicToggle}
-            onClearAll={handleClearAllTopics}
-          />
-        </div>
-
         <PapersNetwork
           selectedPaper={selectedPaper}
           firstDegreeCitations={firstDegreeCitations.filter(citation => 
@@ -231,6 +208,11 @@ const NetworkView: React.FC = () => {
             (paperTopics.get(citation.paperId) || []).some(topic => selectedTopics.has(topic))
           )}
           onBackToTable={handleBackToTable}
+          onPlotTopics={handlePlotTopics}
+          topics={topics}
+          selectedTopics={selectedTopics}
+          onTopicToggle={handleTopicToggle}
+          onClearAllTopics={handleClearAllTopics}
         />
       </div>
 

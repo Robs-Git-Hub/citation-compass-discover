@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -6,7 +7,8 @@ import { Badge } from './ui/badge';
 import { Paper, Citation } from '../types/semantic-scholar';
 import { useCitationStore } from '../store/citationStore';
 import PaperDetailsModal from './PaperDetailsModal';
-import { RotateCcw, Target, ArrowLeft } from 'lucide-react';
+import TopicFilterBar from './TopicFilterBar';
+import { RotateCcw, Target, ArrowLeft, Tag, Filter } from 'lucide-react';
 
 // Brand color constant for JavaScript usage
 const EGO_NODE_COLOR = '#437e84';
@@ -34,12 +36,22 @@ interface PapersNetworkProps {
   selectedPaper: Paper;
   firstDegreeCitations: Citation[];
   onBackToTable: () => void;
+  onPlotTopics: () => void;
+  topics: string[];
+  selectedTopics: Set<string>;
+  onTopicToggle: (topic: string) => void;
+  onClearAllTopics: () => void;
 }
 
 const PapersNetwork: React.FC<PapersNetworkProps> = ({
   selectedPaper,
   firstDegreeCitations,
-  onBackToTable
+  onBackToTable,
+  onPlotTopics,
+  topics,
+  selectedTopics,
+  onTopicToggle,
+  onClearAllTopics
 }) => {
   const { secondDegreeCitations } = useCitationStore();
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null);
@@ -147,11 +159,28 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-4">
           <Button onClick={handleResetView} variant="outline" size="sm" className="flex items-center gap-2">
             <RotateCcw className="h-4 w-4" />
             Reset View
           </Button>
+          <Button
+            onClick={onPlotTopics}
+            className="flex items-center gap-2"
+            variant="outline"
+            size="sm"
+          >
+            <Tag className="h-4 w-4" />
+            Plot Topics
+          </Button>
+          <div className="flex-1">
+            <TopicFilterBar
+              topics={topics}
+              selectedTopics={selectedTopics}
+              onTopicToggle={onTopicToggle}
+              onClearAll={onClearAllTopics}
+            />
+          </div>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span>Nodes: {nodes.length}</span>
             <span>Connections: {edges.length}</span>
@@ -159,7 +188,7 @@ const PapersNetwork: React.FC<PapersNetworkProps> = ({
         </div>
 
         {/* Legend */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <div className="p-4 bg-gray-50 rounded-lg">
           <h3 className="text-sm font-medium text-gray-900 mb-2">Legend</h3>
           <div className="flex items-center gap-6 text-xs">
             <div className="flex items-center gap-2">

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -114,7 +115,7 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
   return (
     <>
       <Dialog open={isOpen && currentView !== 'ai-editor'} onOpenChange={handleCloseModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Plot Topics</DialogTitle>
           </DialogHeader>
@@ -133,13 +134,13 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
                     className="w-full justify-start h-auto p-4 text-left"
                     variant="outline"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-3 w-full">
                       {isLoadingTopics ? (
-                        <Loader2 className="h-5 w-5 mt-0.5 animate-spin" />
+                        <Loader2 className="h-5 w-5 mt-0.5 animate-spin flex-shrink-0" />
                       ) : (
-                        <Sparkles className="h-5 w-5 mt-0.5" />
+                        <Sparkles className="h-5 w-5 mt-0.5 flex-shrink-0" />
                       )}
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="font-medium">AI Proposed Topics</div>
                         <div className="text-sm text-gray-500 mt-1">
                           Let AI analyze your papers and suggest relevant research topics
@@ -153,9 +154,9 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
                     className="w-full justify-start h-auto p-4 text-left"
                     variant="outline"
                   >
-                    <div className="flex items-start gap-3">
-                      <List className="h-5 w-5 mt-0.5" />
-                      <div>
+                    <div className="flex items-start gap-3 w-full">
+                      <List className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
                         <div className="font-medium">Supply Topic List</div>
                         <div className="text-sm text-gray-500 mt-1">
                           Provide your own list of topics to categorize papers
