@@ -177,11 +177,11 @@ const Index = () => {
     if (!geminiApiKey) {
       setIsGeminiKeyModalOpen(true);
     } else {
-      startFetchingAbstracts();
+      startFetchingAbstracts(geminiApiKey);
     }
   };
 
-  const startFetchingAbstracts = async () => {
+  const startFetchingAbstracts = async (apiKey: string) => {
     const eligibleCitations = getEligibleCitationsForAbstractFetch();
     if (eligibleCitations.length === 0) return;
 
@@ -210,7 +210,7 @@ const Index = () => {
           // Use rate limiter to ensure 4-second delays between API calls
           const abstractText = await rateLimiter.add(() => 
             GeminiService.fetchAbstractWithRetry(
-              geminiApiKey,
+              apiKey,
               `https://doi.org/${citation.externalIds?.DOI}`,
               citation.title || ''
             )
@@ -296,7 +296,7 @@ const Index = () => {
       console.log('Gemini API key set for session');
     }
     // Start fetching abstracts after setting the key
-    setTimeout(() => startFetchingAbstracts(), 100);
+    setTimeout(() => startFetchingAbstracts(apiKey), 100);
   };
 
   const handleViewNetwork = () => {
