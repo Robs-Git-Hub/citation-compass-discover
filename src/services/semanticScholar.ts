@@ -2,14 +2,14 @@ import { SearchResponse, CitationsResponse, ProgressState, Paper } from '../type
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1';
 
-// Fields to request from the API - DOI field is not supported by the search endpoint
-const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract';
+// Fields to request from the API - includes externalIds for DOI information
+const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,externalIds';
 
-// Fields for individual paper details - includes DOI which is available for this endpoint
-const PAPER_DETAIL_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,doi';
+// Fields for individual paper details - includes externalIds for DOI information
+const PAPER_DETAIL_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,externalIds';
 
-// Fields for citations - DOI is NOT supported by the citations endpoint
-const CITATION_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract';
+// Fields for citations - includes externalIds for DOI information
+const CITATION_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,externalIds';
 
 class RateLimiter {
   private lastRequestTime = 0;

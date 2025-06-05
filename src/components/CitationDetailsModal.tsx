@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer';
@@ -35,65 +36,79 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
       </div>
       
       <div className="max-h-96 overflow-y-auto space-y-3">
-        {citations.map((citation) => (
-          <div key={citation.paperId} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-            <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">
-              {citation.url ? (
-                <a
-                  href={citation.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-900 hover:text-brand-primary transition-colors"
-                >
-                  {citation.title || 'Untitled'}
-                </a>
-              ) : (
-                citation.title || 'Untitled'
-              )}
-            </h4>
-            
-            <div className="text-sm text-gray-600 space-y-1">
-              <div>
-                {citation.authors?.slice(0, 3).map(author => author.name).join(', ')}
-                {citation.authors && citation.authors.length > 3 && ' et al.'}
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span>{citation.year || 'N/A'}</span>
-                {citation.citationCount && (
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {citation.citationCount} citations
-                  </span>
-                )}
-              </div>
-              
-              {citation.venue && (
-                <div className="text-xs text-gray-500">{citation.venue}</div>
-              )}
-              
-              <div className="flex items-center space-x-3 pt-1">
-                {citation.url && (
+        {citations.map((citation) => {
+          const doi = citation.externalIds?.DOI;
+          
+          return (
+            <div key={citation.paperId} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">
+                {citation.url ? (
                   <a
                     href={citation.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-brand-primary hover:text-brand-primary-hover text-xs"
+                    className="text-gray-900 hover:text-brand-primary transition-colors"
                   >
-                    View paper <ExternalLink className="h-3 w-3 ml-1" />
+                    {citation.title || 'Untitled'}
                   </a>
+                ) : (
+                  citation.title || 'Untitled'
                 )}
-                {citation.abstract && (
-                  <button
-                    onClick={() => handleAbstractClick(citation)}
-                    className="inline-flex items-center text-brand-primary hover:text-brand-primary-hover text-xs"
-                  >
-                    Abstract <FileText className="h-3 w-3 ml-1" />
-                  </button>
+              </h4>
+              
+              <div className="text-sm text-gray-600 space-y-1">
+                <div>
+                  {citation.authors?.slice(0, 3).map(author => author.name).join(', ')}
+                  {citation.authors && citation.authors.length > 3 && ' et al.'}
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span>{citation.year || 'N/A'}</span>
+                  {citation.citationCount && (
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                      {citation.citationCount} citations
+                    </span>
+                  )}
+                </div>
+                
+                {citation.venue && (
+                  <div className="text-xs text-gray-500">{citation.venue}</div>
                 )}
+                
+                <div className="flex items-center space-x-3 pt-1">
+                  {citation.url && (
+                    <a
+                      href={citation.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-brand-primary hover:text-brand-primary-hover text-xs"
+                    >
+                      View paper <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  )}
+                  {citation.abstract && (
+                    <button
+                      onClick={() => handleAbstractClick(citation)}
+                      className="inline-flex items-center text-brand-primary hover:text-brand-primary-hover text-xs"
+                    >
+                      Abstract <FileText className="h-3 w-3 ml-1" />
+                    </button>
+                  )}
+                  {doi && (
+                    <a
+                      href={`https://doi.org/${doi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-brand-primary hover:text-brand-primary-hover text-xs"
+                    >
+                      DOI <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {abstractPaper && (

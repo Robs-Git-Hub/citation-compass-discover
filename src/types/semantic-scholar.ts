@@ -4,6 +4,15 @@ export interface Author {
   name: string;
 }
 
+export interface ExternalIds {
+  DOI?: string;
+  ArXiv?: string;
+  MAG?: string;
+  ACL?: string;
+  PubMed?: string;
+  Corpusid?: string;
+}
+
 export interface Paper {
   paperId: string;
   title: string;
@@ -13,7 +22,7 @@ export interface Paper {
   citationCount?: number;
   url?: string;
   abstract?: string;
-  doi?: string;
+  externalIds?: ExternalIds;
 }
 
 export interface Citation {
@@ -25,7 +34,7 @@ export interface Citation {
   citationCount?: number;
   url?: string;
   abstract?: string;
-  doi?: string;
+  externalIds?: ExternalIds;
   secondDegreeCitations?: Citation[];
   isExpanded?: boolean;
 }

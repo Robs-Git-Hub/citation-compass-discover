@@ -87,8 +87,8 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
           break;
         case 'doi':
           // Sort by whether DOI exists (papers with DOI first when desc)
-          aValue = a.doi ? 1 : 0;
-          bValue = b.doi ? 1 : 0;
+          aValue = a.externalIds?.DOI ? 1 : 0;
+          bValue = b.externalIds?.DOI ? 1 : 0;
           break;
         default:
           return 0;
@@ -175,6 +175,7 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                   const hasSecondDegree = secondDegreeCitations.has(citation.paperId);
                   const secondDegreeCount = secondDegreeCitations.get(citation.paperId)?.length || 0;
                   const totalCitations = citation.citationCount || DEFAULT_NUMBER_VALUE;
+                  const doi = citation.externalIds?.DOI;
                   
                   return (
                     <tr key={citation.paperId} className="hover:bg-gray-50">
@@ -230,9 +231,9 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {citation.doi && (
+                        {doi && (
                           <a
-                            href={`https://doi.org/${citation.doi}`}
+                            href={`https://doi.org/${doi}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="View DOI"
