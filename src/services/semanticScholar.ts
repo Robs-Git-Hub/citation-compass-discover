@@ -1,9 +1,10 @@
+
 import { SearchResponse, CitationsResponse, ProgressState, Paper } from '../types/semantic-scholar';
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1';
 
-// Fields to request from the API - now including DOI
-const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,doi';
+// Fields to request from the API - DOI field is not supported by the search endpoint
+const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract';
 
 class RateLimiter {
   private lastRequestTime = 0;
@@ -63,6 +64,52 @@ class RateLimiter {
     throw error;
   }
 
+  // New method for search with extended retry logic
+  async executeSearchWithRetries<T>(apiCall: () => Promise<T>): Promise<T> {
+    const maxRetryTime = 30000; // 30 seconds
+    const startTime = Date.now();
+    let retries = 0;
+    let delay = 1000; // Start with 1 second delay
+
+    while (Date.now() - startTime < maxRetryTime) {
+      try {
+        // Ensure minimum interval between requests
+        const now = Date.now();
+        const timeSinceLastRequest = now - this.lastRequestTime;
+        if (timeSinceLastRequest < delay) {
+          await this.sleep(delay - timeSinceLastRequest);
+        }
+
+        this.lastRequestTime = Date.now();
+        const result = await apiCall();
+        
+        // Reset failure count on success
+        this.failureCount = 0;
+        return result;
+      } catch (error: any) {
+        retries++;
+        this.failureCount++;
+        
+        if (import.meta.env.DEV) {
+          console.log(`Search attempt ${retries} failed, retrying in ${delay}ms...`);
+        }
+        
+        // Check if we have time for another retry
+        if (Date.now() - startTime + delay >= maxRetryTime) {
+          throw error;
+        }
+        
+        await this.sleep(delay);
+        delay = Math.min(delay * 1.5, 5000); // Increase delay up to 5 seconds
+      }
+    }
+    
+    // If we get here, we've exceeded the retry time
+    const error = new Error('Search failed after 30 seconds of retries');
+    (error as any).status = 408; // Request timeout
+    throw error;
+  }
+
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -78,7 +125,7 @@ export class SemanticScholarService {
       console.log(`Searching papers with query: "${query}"`);
     }
     
-    return this.rateLimiter.executeWithBackoff(async () => {
+    return this.rateLimiter.executeSearchWithRetries(async () => {
       const response = await fetch(url);
       
       if (!response.ok) {
