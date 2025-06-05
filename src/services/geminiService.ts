@@ -1,3 +1,4 @@
+
 export interface GeminiResponse {
   candidates: {
     content: {

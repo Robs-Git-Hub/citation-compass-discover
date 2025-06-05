@@ -8,7 +8,7 @@ import {
 } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, X, Edit2 } from 'lucide-react';
+import { Plus, X, Edit2, Loader2 } from 'lucide-react';
 
 interface TopicEditorModalProps {
   isOpen: boolean;
@@ -27,6 +27,7 @@ const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
   const [newTopic, setNewTopic] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     setEditableTopics([...topics]);
@@ -73,8 +74,13 @@ const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
     }
   };
 
-  const handleFinalize = () => {
-    onTopicsFinalized(editableTopics);
+  const handleFinalize = async () => {
+    setIsProcessing(true);
+    try {
+      await onTopicsFinalized(editableTopics);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -156,13 +162,14 @@ const TopicEditorModal: React.FC<TopicEditorModalProps> = ({
           </div>
 
           <div className="flex gap-2 justify-end pt-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={isProcessing}>
               Cancel
             </Button>
             <Button
               onClick={handleFinalize}
-              disabled={editableTopics.length === 0}
+              disabled={editableTopics.length === 0 || isProcessing}
             >
+              {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Use these topics
             </Button>
           </div>

@@ -8,14 +8,15 @@ import {
 } from './ui/dialog';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Brain, Edit } from 'lucide-react';
+import { Sparkles, List, Loader2 } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 import TopicEditorModal from './TopicEditorModal';
+import { Paper } from '../types/semantic-scholar';
 
 interface TopicPlottingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  papers: any[];
+  papers: Paper[];
   geminiApiKey: string | null;
 }
 
@@ -25,164 +26,183 @@ const TopicPlottingModal: React.FC<TopicPlottingModalProps> = ({
   papers,
   geminiApiKey
 }) => {
-  const [currentView, setCurrentView] = useState<'choice' | 'manual' | 'ai'>('choice');
+  const [currentView, setCurrentView] = useState<'choice' | 'manual' | 'ai-editor'>('choice');
   const [manualTopics, setManualTopics] = useState('');
-  const [aiTopics, setAiTopics] = useState<string[]>([]);
-  const [isLoadingAiTopics, setIsLoadingAiTopics] = useState(false);
-  const [isTopicEditorOpen, setIsTopicEditorOpen] = useState(false);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+  const [aiSuggestedTopics, setAiSuggestedTopics] = useState<string[]>([]);
+  const [isAssigningTopics, setIsAssigningTopics] = useState(false);
 
-  const handleManualSubmit = () => {
-    // Parse the textarea content into a list of topics
+  const handleBackToChoice = () => {
+    setCurrentView('choice');
+    setManualTopics('');
+    setAiSuggestedTopics([]);
+  };
+
+  const handleCloseModal = () => {
+    onClose();
+    setCurrentView('choice');
+    setManualTopics('');
+    setAiSuggestedTopics([]);
+  };
+
+  const handleUseManualTopics = async () => {
+    if (!manualTopics.trim() || !geminiApiKey) return;
+
     const topicList = manualTopics
       .split('\n')
       .map(topic => topic.trim())
       .filter(topic => topic.length > 0);
-    
-    console.log('Manual topics submitted:', topicList);
-    
-    // Reset and close
-    setManualTopics('');
-    setCurrentView('choice');
-    onClose();
+
+    await assignTopicsToAllPapers(topicList);
   };
 
-  const handleClose = () => {
-    setCurrentView('choice');
-    setManualTopics('');
-    setAiTopics([]);
-    onClose();
-  };
+  const handleGenerateAITopics = async () => {
+    if (!geminiApiKey) return;
 
-  const handleAITopics = async () => {
-    if (!geminiApiKey) {
-      console.error('No Gemini API key available');
-      return;
-    }
-
-    setIsLoadingAiTopics(true);
+    setIsLoadingTopics(true);
     try {
-      // Prepare papers data for the API call
-      const papersData = papers.map(paper => ({
-        title: paper.title || 'Untitled',
+      // Prepare papers for API call
+      const papersForApi = papers.map(paper => ({
+        title: paper.title,
         abstract: paper.abstract || undefined
       }));
 
-      const generatedTopics = await GeminiService.generateTopicsFromPapers(papersData, geminiApiKey);
-      setAiTopics(generatedTopics);
-      setIsTopicEditorOpen(true);
+      const generatedTopics = await GeminiService.generateTopicsFromPapers(papersForApi, geminiApiKey);
+      setAiSuggestedTopics(generatedTopics);
+      setCurrentView('ai-editor');
     } catch (error) {
-      console.error('Failed to generate AI topics:', error);
-      // Show user-friendly error message
-      alert('Failed to generate topics. Please check your API key and try again.');
+      console.error('Failed to generate topics:', error);
+      // Here you could show a toast error message
     } finally {
-      setIsLoadingAiTopics(false);
+      setIsLoadingTopics(false);
     }
   };
 
-  const handleAiTopicsFinalized = (finalTopics: string[]) => {
-    console.log('AI topics finalized:', finalTopics);
-    setIsTopicEditorOpen(false);
-    setCurrentView('choice');
-    onClose();
+  const handleAITopicsFinalized = async (finalizedTopics: string[]) => {
+    await assignTopicsToAllPapers(finalizedTopics);
+  };
+
+  const assignTopicsToAllPapers = async (topics: string[]) => {
+    if (!geminiApiKey) return;
+
+    setIsAssigningTopics(true);
+    try {
+      // Prepare papers with IDs for the assignment API call
+      const papersWithIds = papers.map(paper => ({
+        id: paper.paperId,
+        title: paper.title
+      }));
+
+      const assignments = await GeminiService.assignTopicsToPapers(papersWithIds, topics, geminiApiKey);
+      
+      // For now, log the results - in Phase 4 we'll save to store
+      console.log('Topic assignments:', assignments);
+      
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to assign topics:', error);
+      // Here you could show a toast error message
+    } finally {
+      setIsAssigningTopics(false);
+    }
   };
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
+      <Dialog open={isOpen && currentView !== 'ai-editor'} onOpenChange={handleCloseModal}>
         <DialogContent className="max-w-md">
-          {currentView === 'choice' && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Plot Topics</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
+          <DialogHeader>
+            <DialogTitle>Plot Topics</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {currentView === 'choice' && (
+              <>
                 <p className="text-sm text-gray-600 mb-6">
-                  Choose how you'd like to define topics for your papers:
+                  Choose how you'd like to categorize the papers in your network:
                 </p>
                 
                 <div className="space-y-3">
                   <Button
-                    onClick={handleAITopics}
-                    disabled={isLoadingAiTopics}
-                    className="w-full h-auto p-4 flex items-start gap-3"
+                    onClick={handleGenerateAITopics}
+                    disabled={isLoadingTopics}
+                    className="w-full justify-start h-auto p-4 text-left"
                     variant="outline"
                   >
-                    <Brain className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    <div className="text-left">
-                      <div className="font-medium">
-                        {isLoadingAiTopics ? 'Generating Topics...' : 'See AI Proposed Topics'}
-                      </div>
-                      <div className="text-sm text-gray-500 font-normal">
-                        Let AI analyze your papers and suggest relevant topics
+                    <div className="flex items-start gap-3">
+                      {isLoadingTopics ? (
+                        <Loader2 className="h-5 w-5 mt-0.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-5 w-5 mt-0.5" />
+                      )}
+                      <div>
+                        <div className="font-medium">AI Proposed Topics</div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          Let AI analyze your papers and suggest relevant research topics
+                        </div>
                       </div>
                     </div>
                   </Button>
-
+                  
                   <Button
                     onClick={() => setCurrentView('manual')}
-                    className="w-full h-auto p-4 flex items-start gap-3"
+                    className="w-full justify-start h-auto p-4 text-left"
                     variant="outline"
                   >
-                    <Edit className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    <div className="text-left">
-                      <div className="font-medium">Supply Topic List</div>
-                      <div className="text-sm text-gray-500 font-normal">
-                        Manually enter your own list of topics
+                    <div className="flex items-start gap-3">
+                      <List className="h-5 w-5 mt-0.5" />
+                      <div>
+                        <div className="font-medium">Supply Topic List</div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          Provide your own list of topics to categorize papers
+                        </div>
                       </div>
                     </div>
                   </Button>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
 
-          {currentView === 'manual' && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Enter Topics Manually</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <label htmlFor="topics" className="block text-sm font-medium text-gray-700 mb-2">
-                    Topics (one per line)
-                  </label>
-                  <Textarea
-                    id="topics"
-                    placeholder="Machine Learning&#10;Natural Language Processing&#10;Computer Vision&#10;Data Mining"
-                    value={manualTopics}
-                    onChange={(e) => setManualTopics(e.target.value)}
-                    className="min-h-[120px]"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Enter each topic on a separate line
+            {currentView === 'manual' && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Enter Topics</label>
+                  <p className="text-xs text-gray-500">
+                    Enter one topic per line. These will be used to categorize your papers.
                   </p>
                 </div>
                 
+                <Textarea
+                  placeholder=""
+                  value={manualTopics}
+                  onChange={(e) => setManualTopics(e.target.value)}
+                  className="min-h-[120px]"
+                />
+                
                 <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentView('choice')}
-                  >
+                  <Button variant="outline" onClick={handleBackToChoice}>
                     Back
                   </Button>
                   <Button
-                    onClick={handleManualSubmit}
-                    disabled={manualTopics.trim().length === 0}
+                    onClick={handleUseManualTopics}
+                    disabled={!manualTopics.trim() || isAssigningTopics}
                   >
+                    {isAssigningTopics && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Use these topics
                   </Button>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
+      {/* Topic Editor Modal for AI flow */}
       <TopicEditorModal
-        isOpen={isTopicEditorOpen}
-        onClose={() => setIsTopicEditorOpen(false)}
-        topics={aiTopics}
-        onTopicsFinalized={handleAiTopicsFinalized}
+        isOpen={currentView === 'ai-editor'}
+        onClose={handleBackToChoice}
+        topics={aiSuggestedTopics}
+        onTopicsFinalized={handleAITopicsFinalized}
       />
     </>
   );
