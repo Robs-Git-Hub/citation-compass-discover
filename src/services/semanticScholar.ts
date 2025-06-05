@@ -1,10 +1,12 @@
-
 import { SearchResponse, CitationsResponse, ProgressState, Paper } from '../types/semantic-scholar';
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1';
 
 // Fields to request from the API - DOI field is not supported by the search endpoint
 const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract';
+
+// Fields for citations - includes DOI which is available for individual paper details
+const CITATION_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,doi';
 
 class RateLimiter {
   private lastRequestTime = 0;
@@ -140,7 +142,7 @@ export class SemanticScholarService {
   }
 
   static async getPaper(paperId: string): Promise<{ data: Paper }> {
-    const url = `${BASE_URL}/paper/${paperId}?fields=${PAPER_FIELDS}`;
+    const url = `${BASE_URL}/paper/${paperId}?fields=${CITATION_FIELDS}`;
     
     return this.rateLimiter.executeWithBackoff(async () => {
       const response = await fetch(url);
@@ -164,7 +166,7 @@ export class SemanticScholarService {
     const pageSize = Math.min(limit, 100); // API limit is 100 per request
     
     while (true) {
-      const url = `${BASE_URL}/paper/${paperId}/citations?limit=${pageSize}&offset=${offset}&fields=${PAPER_FIELDS}`;
+      const url = `${BASE_URL}/paper/${paperId}/citations?limit=${pageSize}&offset=${offset}&fields=${CITATION_FIELDS}`;
       
       const response = await this.rateLimiter.executeWithBackoff(async () => {
         const response = await fetch(url);
@@ -231,7 +233,7 @@ export class SemanticScholarService {
           isComplete: false 
         });
 
-        // Fetch up to 100 citations per paper (with pagination)
+        // Fetch up to 100 citations per paper (with pagination) - now includes DOI
         const response = await this.getCitations(citation.paperId, 100);
         secondDegreeMap.set(citation.paperId, response.data);
       } catch (error) {
