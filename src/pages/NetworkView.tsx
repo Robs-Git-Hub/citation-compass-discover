@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Paper } from '../types/semantic-scholar';
@@ -76,6 +75,9 @@ const NetworkView: React.FC = () => {
   const handleRetry = () => {
     loadNetworkData();
   };
+
+  // Combine selected paper and citations into a single papers array
+  const allPapers = selectedPaper ? [selectedPaper, ...firstDegreeCitations] : firstDegreeCitations;
 
   if (isLoading) {
     return (
@@ -167,6 +169,7 @@ const NetworkView: React.FC = () => {
       <TopicPlottingModal
         isOpen={isTopicModalOpen}
         onClose={() => setIsTopicModalOpen(false)}
+        papers={allPapers}
       />
     </div>
   );
