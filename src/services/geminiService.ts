@@ -116,7 +116,7 @@ export class GeminiService {
     papers: PaperInput[],
     apiKey: string
   ): Promise<string[]> {
-    const MODEL_ID = "gemini-2.5-flash";
+    const MODEL_ID = "gemini-2.5-flash-preview";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${apiKey}`;
 
     // 1. Construct the prompt body from the paper data
@@ -192,7 +192,7 @@ export class GeminiService {
     topics: string[],
     apiKey: string
   ): Promise<PaperTopicAssignment[]> {
-    const MODEL_ID = "gemini-2.5-flash";
+    const MODEL_ID = "gemini-2.5-flash-preview";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${apiKey}`;
 
     // 1. Format the input data clearly for the prompt
