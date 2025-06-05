@@ -15,6 +15,7 @@ import { Button } from '../components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ErrorHandler, ErrorType, AppError } from '../utils/errorHandler';
 import { Network, Table, FileText } from 'lucide-react';
+import { AbstractStorage } from '../utils/abstractStorage';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -56,6 +57,11 @@ const Index = () => {
       setCitations(firstDegreeCitations);
     }
   }, [selectedPaper, firstDegreeCitations]);
+
+  // Effect to clean up expired localStorage entries on component mount
+  useEffect(() => {
+    AbstractStorage.clearExpiredEntries();
+  }, []);
 
   const handleSearch = async (query: string) => {
     setIsSearching(true);
@@ -186,7 +192,8 @@ const Index = () => {
           const isAbstractNotFound = /abstract\s+not\s+found/i.test(abstractText.trim());
           
           if (isAbstractNotFound) {
-            // Mark as unavailable
+            // Mark as unavailable in localStorage and store
+            AbstractStorage.markAsUnavailable(citation.paperId);
             updateCitationAbstract(citation.paperId, null, true);
             if (import.meta.env.DEV) {
               console.log(`Abstract not found for: ${citation.title}`);
@@ -200,7 +207,8 @@ const Index = () => {
           }
 
         } catch (error) {
-          // After retries failed, mark as unavailable
+          // After retries failed, mark as unavailable in localStorage and store
+          AbstractStorage.markAsUnavailable(citation.paperId);
           updateCitationAbstract(citation.paperId, null, true);
           if (import.meta.env.DEV) {
             console.error(`Failed to fetch abstract for ${citation.title}:`, error);
@@ -261,8 +269,7 @@ const Index = () => {
       !citation.abstract && 
       citation.externalIds?.DOI &&
       !citation.abstractFetchedViaGemini &&
-      // TODO: Add localStorage check for abstractUnavailable in Phase 4
-      true
+      !AbstractStorage.isMarkedAsUnavailable(citation.paperId)
     );
   };
 
@@ -402,7 +409,12 @@ const Index = () => {
         )}
 
         {/* Progress Bar */}
-        <ProgressBar progress={progress} isVisible={isExpanding || isFetchingAbstracts || progress.isComplete} />
+        <ProgressBar 
+          progress={progress} 
+          isVisible={isExpanding || isFetchingAbstracts || progress.isComplete}
+          isExpanding={isExpanding}
+          isFetchingAbstracts={isFetchingAbstracts}
+        />
 
         {error && (
           <ErrorMessage message={error} onRetry={selectedPaper ? handleRetry : undefined} />
