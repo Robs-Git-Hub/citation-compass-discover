@@ -8,6 +8,8 @@ import { ErrorHandler } from '../utils/errorHandler';
 import PapersNetwork from '../components/PapersNetwork';
 import ErrorMessage from '../components/ErrorMessage';
 import { Skeleton } from '../components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Table, Network } from 'lucide-react';
 
 const NetworkView: React.FC = () => {
   const { paperId } = useParams<{ paperId: string }>();
@@ -119,6 +121,36 @@ const NetworkView: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header with title */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Academic Citation Explorer
+          </h1>
+          <p className="text-lg text-gray-600">
+            Interactive visualization of citation relationships
+          </p>
+        </div>
+
+        {/* View Selection Tabs */}
+        <div className="flex justify-center mb-8">
+          <Tabs value="network" className="w-auto">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger 
+                value="table" 
+                className="flex items-center gap-2"
+                onClick={handleBackToTable}
+              >
+                <Table className="h-4 w-4" />
+                Table View
+              </TabsTrigger>
+              <TabsTrigger value="network" className="flex items-center gap-2">
+                <Network className="h-4 w-4" />
+                Network View
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         <PapersNetwork
           selectedPaper={selectedPaper}
           firstDegreeCitations={firstDegreeCitations}

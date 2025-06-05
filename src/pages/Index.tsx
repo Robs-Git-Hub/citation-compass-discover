@@ -10,8 +10,9 @@ import { Paper, Citation } from '../types/semantic-scholar';
 import { SemanticScholarService } from '../services/semanticScholar';
 import { useCitationStore } from '../store/citationStore';
 import { Button } from '../components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ErrorHandler, ErrorType, AppError } from '../utils/errorHandler';
-import { Network } from 'lucide-react';
+import { Network, Table } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -154,6 +155,31 @@ const Index = () => {
           isVisible={showResults}
         />
 
+        {/* View Selection Tabs - Only show when there's a selected paper */}
+        {selectedPaper && (
+          <div className="w-full max-w-6xl mx-auto mt-8 mb-6">
+            <div className="flex justify-center">
+              <Tabs value="table" className="w-auto">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="table" className="flex items-center gap-2">
+                    <Table className="h-4 w-4" />
+                    Table View
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="network" 
+                    className="flex items-center gap-2"
+                    onClick={handleViewNetwork}
+                    disabled={!canViewNetwork}
+                  >
+                    <Network className="h-4 w-4" />
+                    Network View
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          </div>
+        )}
+
         {selectedPaper && (
           <div className="w-full max-w-6xl mx-auto mt-8">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -184,40 +210,20 @@ const Index = () => {
           </div>
         )}
 
-        {/* Action Buttons */}
-        {(canExpandToSecondDegree || canViewNetwork) && (
+        {/* Action Button - Only show Expand to 2nd Degree button with accent color */}
+        {canExpandToSecondDegree && (
           <div className="w-full max-w-6xl mx-auto mt-6">
-            <div className="text-center space-y-4">
-              {canViewNetwork && (
-                <div>
-                  <Button
-                    onClick={handleViewNetwork}
-                    className="bg-[#437e84] hover:bg-[#2d5a5f] text-white px-6 py-3 text-lg mr-4"
-                  >
-                    <Network className="h-5 w-5 mr-2" />
-                    Papers Network
-                  </Button>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Visualize citation relationships in an interactive network graph
-                  </p>
-                </div>
-              )}
-              
-              {canExpandToSecondDegree && (
-                <div>
-                  <Button
-                    onClick={handleExpandToSecondDegree}
-                    variant="outline"
-                    className="px-6 py-3 text-lg"
-                    disabled={isExpanding}
-                  >
-                    {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
-                  </Button>
-                  <p className="text-sm text-gray-600 mt-2">
-                    This will find papers that cite the papers shown below
-                  </p>
-                </div>
-              )}
+            <div className="text-center">
+              <Button
+                onClick={handleExpandToSecondDegree}
+                className="bg-accent text-accent-foreground hover:bg-accent/80 px-6 py-3 text-lg"
+                disabled={isExpanding}
+              >
+                {isExpanding ? 'Expanding...' : 'Expand to 2nd Degree Citations'}
+              </Button>
+              <p className="text-sm text-gray-600 mt-2">
+                This will find papers that cite the papers shown below
+              </p>
             </div>
           </div>
         )}
