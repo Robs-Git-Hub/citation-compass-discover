@@ -5,8 +5,11 @@ const BASE_URL = 'https://api.semanticscholar.org/graph/v1';
 // Fields to request from the API - DOI field is not supported by the search endpoint
 const PAPER_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract';
 
-// Fields for citations - includes DOI which is available for individual paper details
-const CITATION_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,doi';
+// Fields for individual paper details - includes DOI which is available for this endpoint
+const PAPER_DETAIL_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract,doi';
+
+// Fields for citations - DOI is NOT supported by the citations endpoint
+const CITATION_FIELDS = 'paperId,title,authors,year,venue,citationCount,url,abstract';
 
 class RateLimiter {
   private lastRequestTime = 0;
@@ -142,7 +145,7 @@ export class SemanticScholarService {
   }
 
   static async getPaper(paperId: string): Promise<{ data: Paper }> {
-    const url = `${BASE_URL}/paper/${paperId}?fields=${CITATION_FIELDS}`;
+    const url = `${BASE_URL}/paper/${paperId}?fields=${PAPER_DETAIL_FIELDS}`;
     
     return this.rateLimiter.executeWithBackoff(async () => {
       const response = await fetch(url);
@@ -233,7 +236,7 @@ export class SemanticScholarService {
           isComplete: false 
         });
 
-        // Fetch up to 100 citations per paper (with pagination) - now includes DOI
+        // Fetch up to 100 citations per paper (with pagination)
         const response = await this.getCitations(citation.paperId, 100);
         secondDegreeMap.set(citation.paperId, response.data);
       } catch (error) {
