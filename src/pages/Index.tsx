@@ -335,7 +335,7 @@ const Index = () => {
     firstDegreeCitations.some(c => c.citationCount && c.citationCount > 0) && 
     !isExpanding && 
     !isFetchingAbstracts &&
-    !progress.isComplete;
+    secondDegreeCitations.size === 0; // Only hide if we've actually expanded to 2nd degree
 
   const canViewNetwork = firstDegreeCitations.length > 0;
 
