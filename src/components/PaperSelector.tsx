@@ -21,7 +21,19 @@ const PaperSelector: React.FC<PaperSelectorProps> = ({ papers, onSelect, isVisib
             className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:outline-none focus:bg-[#437e84] focus:text-white transition-colors"
           >
             <div className="font-medium text-gray-900 mb-1 focus:text-white">
-              {paper.title}
+              {paper.url ? (
+                <a
+                  href={paper.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#437e84] focus:text-white"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {paper.title}
+                </a>
+              ) : (
+                paper.title
+              )}
             </div>
             <div className="text-sm text-gray-600">
               {paper.authors?.map(author => author.name).join(', ')} • {paper.year || 'Unknown year'}

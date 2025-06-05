@@ -147,7 +147,18 @@ const CitationsTable: React.FC<CitationsTableProps> = ({ citations, isLoading })
                     <tr key={citation.paperId} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900 line-clamp-2">
-                          {citation.title || 'Untitled'}
+                          {citation.url ? (
+                            <a
+                              href={citation.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#437e84] hover:text-[#2d5a5f] hover:underline"
+                            >
+                              {citation.title || 'Untitled'}
+                            </a>
+                          ) : (
+                            citation.title || 'Untitled'
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">

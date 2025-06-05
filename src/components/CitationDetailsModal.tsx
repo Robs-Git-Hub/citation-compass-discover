@@ -31,7 +31,18 @@ const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
         {citations.map((citation) => (
           <div key={citation.paperId} className="border border-gray-200 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">
-              {citation.title || 'Untitled'}
+              {citation.url ? (
+                <a
+                  href={citation.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#437e84] hover:text-[#2d5a5f] hover:underline"
+                >
+                  {citation.title || 'Untitled'}
+                </a>
+              ) : (
+                citation.title || 'Untitled'
+              )}
             </h4>
             
             <div className="text-sm text-gray-600 space-y-1">

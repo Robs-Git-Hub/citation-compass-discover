@@ -139,7 +139,20 @@ const Index = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">Selected Paper</h2>
               <div className="text-gray-700">
-                <div className="font-medium mb-1">{selectedPaper.title}</div>
+                <div className="font-medium mb-1">
+                  {selectedPaper.url ? (
+                    <a
+                      href={selectedPaper.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#437e84] hover:text-[#2d5a5f] hover:underline"
+                    >
+                      {selectedPaper.title}
+                    </a>
+                  ) : (
+                    selectedPaper.title
+                  )}
+                </div>
                 <div className="text-sm text-gray-600">
                   {selectedPaper.authors?.map(author => author.name).join(', ')} • {selectedPaper.year}
                 </div>
