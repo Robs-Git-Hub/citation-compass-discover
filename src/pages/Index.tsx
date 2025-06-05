@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SearchBar from '../components/SearchBar';
 import PaperSelector from '../components/PaperSelector';
@@ -9,6 +8,7 @@ import { Paper, Citation } from '../types/semantic-scholar';
 import { SemanticScholarService } from '../services/semanticScholar';
 import { useCitationStore } from '../store/citationStore';
 import { Button } from '../components/ui/button';
+import { ErrorHandler, ErrorType, AppError } from '../utils/errorHandler';
 
 const Index = () => {
   const [searchResults, setSearchResults] = useState<Paper[]>([]);
@@ -41,9 +41,9 @@ const Index = () => {
       const response = await SemanticScholarService.searchPapers(query);
       setSearchResults(response.data);
       setShowResults(true);
-    } catch (err) {
-      setError('Failed to search papers. Please check your connection and try again.');
-      console.error('Search error:', err);
+    } catch (err: any) {
+      const appError = err instanceof Error && 'type' in err ? err as AppError : ErrorHandler.handleApiError(err);
+      setError(appError.userMessage);
     } finally {
       setIsSearching(false);
     }
@@ -60,9 +60,9 @@ const Index = () => {
       const response = await SemanticScholarService.getCitations(paper.paperId);
       setCitations(response.data);
       setFirstDegreeCitations(response.data);
-    } catch (err) {
-      setError('Failed to load citations. Please try again.');
-      console.error('Citations error:', err);
+    } catch (err: any) {
+      const appError = err instanceof Error && 'type' in err ? err as AppError : ErrorHandler.handleApiError(err);
+      setError(appError.userMessage);
     } finally {
       setIsLoadingCitations(false);
     }
@@ -85,10 +85,12 @@ const Index = () => {
         setSecondDegreeCitations(paperId, citationList);
       });
 
-      console.log('2nd degree expansion completed');
-    } catch (err) {
-      setError('Failed to expand to 2nd degree citations. Please try again.');
-      console.error('2nd degree expansion error:', err);
+      if (import.meta.env.DEV) {
+        console.log('2nd degree expansion completed');
+      }
+    } catch (err: any) {
+      const appError = err instanceof Error && 'type' in err ? err as AppError : ErrorHandler.handleApiError(err);
+      setError(appError.userMessage);
     } finally {
       setIsExpanding(false);
     }
